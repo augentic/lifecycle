@@ -40,7 +40,7 @@ pub fn run(
     verify_artifacts(&change_dir, engine)?;
 
     println!("planning artefacts generated at {}", change_dir.display());
-    println!("next step: review artefacts, then run `lc fan-out {change}`");
+    println!("next step: review artefacts, then run `alc fan-out {change}`");
     Ok(())
 }
 

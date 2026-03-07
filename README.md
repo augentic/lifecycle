@@ -1,4 +1,4 @@
-# lc
+# Augentic Lifecycle (alc)
 
 Multi-repo orchestration CLI for spec-driven development. Centralised planning, distributed execution.
 
@@ -23,19 +23,19 @@ capabilities = ["ingest", "transform"]
 Then run the workflow:
 
 ```bash
-lc propose my-change --description "Add priority field to ingest pipeline"
+alc propose my-change --description "Add priority field to ingest pipeline"
 # Review the generated artefacts in openspec/changes/my-change/
 
-lc fan-out my-change
+alc fan-out my-change
 # Creates branches and draft PRs in target repos
 
 lc apply my-change
 # Invokes the AI agent in each target repo to implement the change
 
-lc sync my-change
+alc sync my-change
 # Syncs PR state (open/merged/closed) into status.toml
 
-lc archive my-change
+alc archive my-change
 # Moves the change to archive after all PRs are merged
 ```
 
@@ -43,7 +43,7 @@ Every command supports `--dry-run` to preview without side effects.
 
 ## Commands
 
-### `lc propose <change> --description <text> [--dry-run]`
+### `alc propose <change> --description <text> [--dry-run]`
 
 Generate planning artefacts for a new cross-repo change. The agent reads `registry.toml` and current specs from target repos, then produces:
 
@@ -55,29 +55,29 @@ Generate planning artefacts for a new cross-repo change. The agent reads `regist
 
 All artefacts are written to `openspec/changes/<change>/`.
 
-### `lc fan-out <change> [--dry-run]`
+### `alc fan-out <change> [--dry-run]`
 
 Distribute the change to target repos. For each repo group in `pipeline.toml`:
 
 1. Shallow-clones the repo
-2. Creates branch `lc/<change>` (or the branch specified in pipeline.toml)
+2. Creates branch `alc/<change>` (or the branch specified in pipeline.toml)
 3. Copies delta specs, upstream context (design.md, tasks.md), and a brief.toml
 4. Commits, pushes, and opens a draft PR
 5. Updates `status.toml` to `distributed`
 
-### `lc apply <change> [--target <id>] [--dry-run]`
+### `alc apply <change> [--target <id>] [--dry-run]`
 
 Invoke the AI agent in each target repo to implement the change. Targets are processed in dependency order (topological sort). Use `--target` to apply a single target.
 
 A target must be in `distributed` state before apply will run it. Targets already at `implemented` or later are skipped.
 
-### `lc status <change>`
+### `alc status <change>`
 
 Print the pipeline status table showing each target's current state and PR URL.
 
 States: `pending` → `distributed` → `applying` → `implemented` → `reviewing` → `merged` → `archived`. A target can also be `failed`.
 
-### `lc sync <change> [--mark-ready]`
+### `alc sync <change> [--mark-ready]`
 
 Synchronize PR state from GitHub into `status.toml`. Uses `gh pr view` to check each target's PR. Transitions:
 
@@ -87,11 +87,11 @@ Synchronize PR state from GitHub into `status.toml`. Uses `gh pr view` to check 
 
 With `--mark-ready`, draft PRs for `implemented` targets are promoted to ready for review via `gh pr ready`.
 
-### `lc archive <change> [--dry-run]`
+### `alc archive <change> [--dry-run]`
 
 Archive a completed change. All targets must be in `merged` state. Moves the change folder to `openspec/changes/archive/YYYY-MM-DD-<change>/`.
 
-### `lc registry list`
+### `alc registry list`
 
 List all services in `registry.toml`.
 
@@ -150,10 +150,12 @@ Auto-managed state for each target in a change. Created on first use by `fan-out
 
 ## Environment Variables
 
-| Variable | Default | Description |
-| --- | --- | --- |
+
+| Variable             | Default  | Description                                                          |
+| -------------------- | -------- | -------------------------------------------------------------------- |
 | `OPSX_AGENT_BACKEND` | `claude` | Agent backend. Set to `dry-run` to print commands without executing. |
-| `RUST_LOG` | `info` | Log level filter (standard `tracing` env filter syntax). |
+| `RUST_LOG`           | `info`   | Log level filter (standard `tracing` env filter syntax).             |
+
 
 ## Prerequisites
 

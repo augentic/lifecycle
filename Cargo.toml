@@ -1,5 +1,5 @@
 [package]
-name = "lc"
+name = "alc"
 description = "Multi-repo orchestration CLI for spec-driven development"
 version.workspace = true
 edition.workspace = true

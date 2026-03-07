@@ -51,10 +51,10 @@ pub fn run(change: &str, dry_run: bool, engine: &dyn Engine, workspace: &Path) -
         engine.distribute(&ctx)?;
 
         let commit_msg =
-            format!("lc: distribute {change} for {}", group.crates.join(", "));
+            format!("alc: distribute {change} for {}", group.crates.join(", "));
         git::add_commit_push(&tmp, &commit_msg, &branch)?;
 
-        let pr_title = format!("lc: {change} — {}", group.crates.join(", "));
+        let pr_title = format!("alc: {change} — {}", group.crates.join(", "));
         let pr_body = format!(
             "Distributed from central plan.\n\nTargets: {}\nSpecs: {}",
             group.crates.join(", "),
@@ -82,7 +82,7 @@ fn branch_name(change: &str, group: &RepoGroup) -> String {
         .first()
         .and_then(|t| t.branch.as_deref())
         .map(String::from)
-        .unwrap_or_else(|| format!("lc/{change}"))
+        .unwrap_or_else(|| format!("alc/{change}"))
 }
 
 fn print_dry_run(change: &str, groups: &[RepoGroup], pipeline: &pipeline::Pipeline) {

@@ -104,7 +104,7 @@ pub fn run(
             .branch
             .as_deref()
             .map(String::from)
-            .unwrap_or_else(|| format!("lc/{change}"));
+            .unwrap_or_else(|| format!("alc/{change}"));
         git::clone_shallow(&svc.repo, &tmp)?;
         git::run_cmd("git", &["checkout", &branch], &tmp)
             .with_context(|| format!("checking out branch {branch}"))?;
@@ -118,7 +118,7 @@ pub fn run(
         let succeeded = agent::invoke(&apply_cmd, &tmp)?;
 
         if succeeded {
-            let msg = format!("lc: implement {change} for {}", target.id);
+            let msg = format!("alc: implement {change} for {}", target.id);
             if let Err(e) = git::add_commit_push(&tmp, &msg, &branch) {
                 tracing::warn!(target = %target.id, error = %e, "push failed (possibly no changes)");
             }
