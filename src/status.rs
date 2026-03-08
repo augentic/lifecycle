@@ -156,8 +156,9 @@ impl PipelineStatus {
             ) | (
                 TargetState::Implemented | TargetState::Reviewing | TargetState::Merged,
                 TargetState::Merged
-            ) | (
-                TargetState::Applying
+            ) |             (
+                TargetState::Pending
+                    | TargetState::Applying
                     | TargetState::Distributed
                     | TargetState::Implemented
                     | TargetState::Reviewing

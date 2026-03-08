@@ -7,10 +7,8 @@ use clap::{Parser, Subcommand};
     after_help = "\
 Typical workflow:
   alc propose <change> -d \"description\"   Generate planning artefacts
-  alc fan-out <change>                     Distribute to target repos, open draft PRs
-  alc apply <change>                       Invoke agent per repo to implement
-  alc sync <change>                        Sync PR state from GitHub
-  alc archive <change>                     Archive after all PRs merged"
+  alc apply <change>                       Distribute specs, open draft PRs, invoke agent
+  alc sync <change>                        Sync PR state, auto-archive when all merged"
 )]
 pub struct Cli {
     /// Increase log verbosity to debug level
@@ -19,7 +17,7 @@ pub struct Cli {
     /// Decrease log verbosity to warnings only
     #[arg(long, short = 'q', global = true)]
     pub quiet: bool,
-    /// Max concurrent repo operations (fan-out, apply)
+    /// Max concurrent repo operations
     #[arg(long, short = 'j', global = true, default_value = "4")]
     pub concurrency: usize,
     #[command(subcommand)]
@@ -41,15 +39,7 @@ pub enum Command {
         #[arg(long)]
         dry_run: bool,
     },
-    /// Distribute change to target repos, open draft PRs
-    FanOut {
-        /// Change name (e.g., r9k-http)
-        change: String,
-        /// Preview what would happen without executing
-        #[arg(long)]
-        dry_run: bool,
-    },
-    /// Invoke agent per repo group in dependency order
+    /// Distribute specs, open draft PRs, and invoke agent per repo group in dependency order
     Apply {
         /// Change name
         change: String,
@@ -68,15 +58,7 @@ pub enum Command {
         /// Change name
         change: String,
     },
-    /// Archive completed change in the hub
-    Archive {
-        /// Change name
-        change: String,
-        /// Preview what would happen without archiving
-        #[arg(long)]
-        dry_run: bool,
-    },
-    /// Synchronize PR state into status.toml
+    /// Synchronize PR state from GitHub; auto-archive when all targets are merged
     Sync {
         /// Change name
         change: String,

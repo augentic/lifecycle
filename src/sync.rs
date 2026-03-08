@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 
 use crate::context::ChangeContext;
 use crate::session::Session;
@@ -79,5 +79,45 @@ pub async fn run(change: &str, mark_ready: bool, session: &Session) -> Result<()
     }
 
     output::print_status_summary(&ctx.status);
+
+    let all_merged = ctx
+        .status
+        .targets
+        .iter()
+        .all(|t| t.state.is_at_least(status::TargetState::Merged));
+
+    if all_merged {
+        archive(change, &ctx, session)?;
+    }
+
+    Ok(())
+}
+
+fn archive(change: &str, ctx: &ChangeContext, session: &Session) -> Result<()> {
+    let archive_dest = session
+        .workspace
+        .join(session.engine.archive_dir())
+        .join(session.engine.archive_dirname(change));
+
+    if archive_dest.exists() {
+        bail!(
+            "archive destination already exists: {}",
+            archive_dest.display()
+        );
+    }
+
+    if let Some(parent) = archive_dest.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating archive parent dir {}", parent.display()))?;
+    }
+    std::fs::rename(&ctx.change_dir, &archive_dest).with_context(|| {
+        format!(
+            "moving {} to {}",
+            ctx.change_dir.display(),
+            archive_dest.display()
+        )
+    })?;
+
+    println!("archived to {}", archive_dest.display());
     Ok(())
 }

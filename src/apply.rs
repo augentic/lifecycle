@@ -4,16 +4,22 @@ use anyhow::{Context, Result, bail};
 use futures::stream::{self, StreamExt};
 
 use crate::context::ChangeContext;
+use crate::engine::DistributeContext;
 use crate::pipeline::RepoGroup;
 use crate::session::Session;
 use crate::status::TargetState;
 use crate::util::TempDir;
-use crate::{agent, brief, git, output, status};
+use crate::{agent, brief, git, github, output, status};
 
-/// Result of applying a single repo group.
+struct TargetUpdate {
+    id: String,
+    state: TargetState,
+    pr_url: Option<String>,
+}
+
 struct ApplyResult {
     repo: String,
-    updates: Vec<(String, TargetState)>,
+    updates: Vec<TargetUpdate>,
     error: Option<anyhow::Error>,
 }
 
@@ -57,9 +63,10 @@ pub async fn run(
     let mut had_failure = false;
 
     for (level_idx, level) in levels.iter().enumerate() {
-        let actionable: Vec<&RepoGroup> = level
+        // Pair each group with whether it needs distribution (specs not yet pushed).
+        let actionable: Vec<(&RepoGroup, bool)> = level
             .iter()
-            .filter(|group| {
+            .filter_map(|group| {
                 let all_done = group.targets.iter().all(|t| {
                     ctx.status
                         .get(&t.id)
@@ -67,25 +74,21 @@ pub async fn run(
                 });
                 if all_done {
                     tracing::info!(repo = %group.repo, "all targets already implemented, skipping");
-                    return false;
-                }
-
-                let any_pending = group.targets.iter().any(|t| {
-                    ctx.status
-                        .get(&t.id)
-                        .is_none_or(|s| s.state == status::TargetState::Pending)
-                });
-                if any_pending {
-                    tracing::warn!(repo = %group.repo, "targets in pending state, skipping");
-                    return false;
+                    return None;
                 }
 
                 if is_blocked_by_upstream(group, &ctx) {
                     tracing::warn!(repo = %group.repo, "blocked by upstream, skipping");
-                    return false;
+                    return None;
                 }
 
-                true
+                let needs_distribution = group.targets.iter().any(|t| {
+                    ctx.status
+                        .get(&t.id)
+                        .is_none_or(|s| !s.state.is_at_least(status::TargetState::Distributed))
+                });
+
+                Some((group, needs_distribution))
             })
             .collect();
 
@@ -99,13 +102,13 @@ pub async fn run(
             "processing dependency level"
         );
 
-        for group in &actionable {
+        // Mark already-distributed targets as Applying before concurrent work.
+        for (group, _) in &actionable {
             for t in &group.targets {
-                if !ctx
-                    .status
-                    .get(&t.id)
-                    .is_some_and(|s| s.state.is_at_least(status::TargetState::Implemented))
-                {
+                if ctx.status.get(&t.id).is_some_and(|s| {
+                    s.state.is_at_least(status::TargetState::Distributed)
+                        && !s.state.is_at_least(status::TargetState::Implemented)
+                }) {
                     ctx.status.transition(&t.id, TargetState::Applying)?;
                 }
             }
@@ -113,17 +116,39 @@ pub async fn run(
         ctx.save_status()?;
 
         let results: Vec<ApplyResult> = stream::iter(actionable)
-            .map(|group| {
+            .map(|(group, needs_dist)| {
                 let change = change.to_string();
-                async move { apply_group(&change, group, session).await }
+                async move { apply_group(&change, group, needs_dist, session).await }
             })
             .buffer_unordered(session.concurrency)
             .collect()
             .await;
 
         for result in results {
-            for (target_id, new_state) in &result.updates {
-                ctx.status.transition(target_id, *new_state)?;
+            for update in &result.updates {
+                let current = ctx.status.get(&update.id).map(|s| s.state);
+
+                // Targets that were Pending/Failed need intermediate transitions
+                // before reaching the final state.
+                if matches!(current, Some(TargetState::Pending | TargetState::Failed)) {
+                    if update.state == TargetState::Failed {
+                        ctx.status.transition(&update.id, TargetState::Failed)?;
+                    } else {
+                        ctx.status
+                            .transition(&update.id, TargetState::Distributed)?;
+                        if let Some(pr) = &update.pr_url {
+                            ctx.status.set_pr(&update.id, pr.clone())?;
+                        }
+                        ctx.status.transition(&update.id, TargetState::Applying)?;
+                        ctx.status
+                            .transition(&update.id, TargetState::Implemented)?;
+                    }
+                } else {
+                    ctx.status.transition(&update.id, update.state)?;
+                    if let Some(pr) = &update.pr_url {
+                        ctx.status.set_pr(&update.id, pr.clone())?;
+                    }
+                }
             }
 
             if let Some(err) = result.error {
@@ -149,8 +174,10 @@ pub async fn run(
     Ok(())
 }
 
-async fn apply_group(change: &str, group: &RepoGroup, session: &Session) -> ApplyResult {
-    match apply_group_inner(change, group, session).await {
+async fn apply_group(
+    change: &str, group: &RepoGroup, needs_distribution: bool, session: &Session,
+) -> ApplyResult {
+    match apply_group_inner(change, group, needs_distribution, session).await {
         Ok(updates) => ApplyResult {
             repo: group.repo.clone(),
             updates,
@@ -160,7 +187,11 @@ async fn apply_group(change: &str, group: &RepoGroup, session: &Session) -> Appl
             let updates = group
                 .targets
                 .iter()
-                .map(|t| (t.id.clone(), TargetState::Failed))
+                .map(|t| TargetUpdate {
+                    id: t.id.clone(),
+                    state: TargetState::Failed,
+                    pr_url: None,
+                })
                 .collect();
             ApplyResult {
                 repo: group.repo.clone(),
@@ -172,16 +203,55 @@ async fn apply_group(change: &str, group: &RepoGroup, session: &Session) -> Appl
 }
 
 async fn apply_group_inner(
-    change: &str, group: &RepoGroup, session: &Session,
-) -> Result<Vec<(String, TargetState)>> {
-    tracing::info!(repo = %group.repo, crates = ?group.crates, "applying");
+    change: &str, group: &RepoGroup, needs_distribution: bool, session: &Session,
+) -> Result<Vec<TargetUpdate>> {
+    tracing::info!(repo = %group.repo, crates = ?group.crates, needs_distribution, "applying");
 
     let tmp = TempDir::new(&format!("apply-{}", group.repo_label()))?;
     let branch = group.branch_name(change);
+
     git::clone_shallow(&group.repo, tmp.path()).await?;
-    git::checkout_existing_branch(tmp.path(), &branch)
-        .await
-        .with_context(|| format!("checking out branch {branch}"))?;
+
+    let mut pr_url: Option<String> = None;
+
+    if needs_distribution {
+        if git::branch_exists(tmp.path(), &branch).await? {
+            git::checkout_existing_branch(tmp.path(), &branch).await?;
+        } else {
+            git::checkout_new_branch(tmp.path(), &branch).await?;
+        }
+
+        let dist_ctx = DistributeContext {
+            workspace: &session.workspace,
+            change,
+            repo_dir: tmp.path(),
+            group,
+        };
+        session.engine.distribute(&dist_ctx)?;
+
+        let commit_msg = format!("alc: distribute {change} for {}", group.crates.join(", "));
+        git::add_commit_push(tmp.path(), &commit_msg, &branch).await?;
+
+        let gh = session.github()?;
+        let (owner, repo_name) = git::parse_repo_url(&group.repo)?;
+        let base = git::default_branch(tmp.path()).await?;
+        let pr_title = format!("alc: {change} — {}", group.crates.join(", "));
+        let pr_body = format!(
+            "Distributed from central plan.\n\nTargets: {}\nSpecs: {}",
+            group.crates.join(", "),
+            group.specs.join(", "),
+        );
+        let url =
+            github::create_draft_pr(gh, &owner, &repo_name, &branch, &base, &pr_title, &pr_body)
+                .await?;
+
+        tracing::info!(repo = %group.repo, pr = %url, "distributed");
+        pr_url = Some(url);
+    } else {
+        git::checkout_existing_branch(tmp.path(), &branch)
+            .await
+            .with_context(|| format!("checking out branch {branch}"))?;
+    }
 
     let change_brief = brief::generate(change, group, &session.engine);
     let apply_cmd = session.engine.apply_command(change, &change_brief);
@@ -202,7 +272,11 @@ async fn apply_group_inner(
         Ok(group
             .targets
             .iter()
-            .map(|t| (t.id.clone(), TargetState::Implemented))
+            .map(|t| TargetUpdate {
+                id: t.id.clone(),
+                state: TargetState::Implemented,
+                pr_url: pr_url.clone(),
+            })
             .collect())
     } else {
         bail!("agent failed for repo '{}'", group.repo);
@@ -213,8 +287,7 @@ async fn apply_group_inner(
 /// (in another group) that is not yet Implemented. Uses all dependency edges
 /// (`depends_on` and `[[dependencies]]`) to stay consistent with topological sort.
 fn is_blocked_by_upstream(group: &RepoGroup, ctx: &ChangeContext) -> bool {
-    let group_target_ids: HashSet<&str> =
-        group.targets.iter().map(|t| t.id.as_str()).collect();
+    let group_target_ids: HashSet<&str> = group.targets.iter().map(|t| t.id.as_str()).collect();
 
     let all_edges = ctx.pipeline.all_edges();
 
@@ -249,7 +322,16 @@ fn print_dry_run(change: &str, groups: &[&RepoGroup], session: &Session, ctx: &C
                 .status
                 .get(&t.id)
                 .map_or_else(|| "unknown".to_string(), |s| s.state.to_string());
-            println!("  target: {} (state={})", t.id, state);
+            let action = if ctx
+                .status
+                .get(&t.id)
+                .is_none_or(|s| !s.state.is_at_least(status::TargetState::Distributed))
+            {
+                "distribute + apply"
+            } else {
+                "apply"
+            };
+            println!("  target: {} (state={}, action={})", t.id, state, action);
         }
         let change_brief = brief::generate(change, group, &session.engine);
         let cmd = session.engine.apply_command(change, &change_brief);

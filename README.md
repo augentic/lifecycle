@@ -26,20 +26,27 @@ Then run the workflow:
 alc propose my-change --description "Add priority field to ingest pipeline"
 # Review the generated artefacts in openspec/changes/my-change/
 
-alc fan-out my-change
-# Creates branches and draft PRs in target repos
-
 alc apply my-change
-# Invokes the AI agent in each target repo to implement the change
+# Distributes specs, opens draft PRs, and invokes the AI agent in each target repo
 
 alc sync my-change
-# Syncs PR state (open/merged/closed) into status.toml
-
-alc archive my-change
-# Moves the change to archive after all PRs are merged
+# Syncs PR state from GitHub; auto-archives when all PRs are merged
 ```
 
 Every command supports `--dry-run` to preview without side effects.
+
+## Workflow
+
+```mermaid
+graph TD
+    Start([Start]) --> Propose[alc propose]
+    Propose -->|Generates Plan| Apply[alc apply]
+    Apply -->|Distributes + Implements| Sync[alc sync]
+    Sync -->|Updates Status| Check{All Merged?}
+    Check -- No --> Review[Manual Review/Merge]
+    Review --> Sync
+    Check -- Yes --> Archived([Archived])
+```
 
 ## Commands
 
@@ -55,27 +62,26 @@ Generate planning artefacts for a new cross-repo change. The agent reads `regist
 
 All artefacts are written to `openspec/changes/<change>/`.
 
-### `alc fan-out <change> [--dry-run]`
+### `alc apply <change> [--target <id>] [--dry-run] [--continue-on-failure]`
 
-Distribute the change to target repos. For each repo group in `pipeline.toml`:
+Distribute specs and invoke the AI agent in each target repo to implement the change. Targets are processed in dependency order (topological sort). Use `--target` to apply a single target.
+
+For each repo group in `pipeline.toml`:
 
 1. Shallow-clones the repo
 2. Creates branch `alc/<change>` (or the branch specified in pipeline.toml)
 3. Copies delta specs, upstream context (design.md, tasks.md), and a brief.toml
 4. Commits, pushes, and opens a draft PR
-5. Updates `status.toml` to `distributed`
+5. Invokes the AI agent to implement the change
+6. Commits and pushes the agent's changes
 
-### `alc apply <change> [--target <id>] [--dry-run]`
-
-Invoke the AI agent in each target repo to implement the change. Targets are processed in dependency order (topological sort). Use `--target` to apply a single target.
-
-A target must be in `distributed` state before apply will run it. Targets already at `implemented` or later are skipped.
+Targets already at `distributed` skip straight to agent invocation. Targets at `implemented` or later are skipped entirely. Use `--continue-on-failure` to keep processing independent groups when one fails.
 
 ### `alc status <change>`
 
 Print the pipeline status table showing each target's current state and PR URL.
 
-States: `pending` → `distributed` → `applying` → `implemented` → `reviewing` → `merged` → `archived`. A target can also be `failed`.
+States: `pending` → `distributed` → `applying` → `implemented` → `reviewing` → `merged`. A target can also be `failed`.
 
 ### `alc sync <change> [--mark-ready]`
 
@@ -87,9 +93,7 @@ Synchronize PR state from GitHub into `status.toml`. Fetches each target's PR vi
 
 With `--mark-ready`, draft PRs for `implemented` targets are promoted to ready for review via the GitHub GraphQL API.
 
-### `alc archive <change> [--dry-run]`
-
-Archive a completed change. All targets must be in `merged` state. Moves the change folder to `openspec/changes/archive/YYYY-MM-DD-<change>/`.
+When all targets reach `merged`, the change is automatically archived to `openspec/changes/archive/YYYY-MM-DD-<change>/`.
 
 ### `alc init`
 
@@ -127,7 +131,7 @@ domain = "train"                                         # domain grouping
 capabilities = ["r9k-xml-ingest"]                        # what the service does
 ```
 
-Multiple services can share a repo. During fan-out, services sharing a repo are grouped into one branch and one PR.
+Multiple services can share a repo. During apply, services sharing a repo are grouped into one branch and one PR.
 
 ### `pipeline.toml`
 
@@ -158,14 +162,14 @@ Target fields `repo`, `crate`, `project_dir`, and `branch` are optional override
 
 ### `status.toml`
 
-Auto-managed state for each target in a change. Created on first use by `fan-out` or `status`. Updated by `fan-out`, `apply`, `sync`, and `archive`.
+Auto-managed state for each target in a change. Created on first use by `apply` or `status`. Updated by `apply` and `sync`.
 
 ## Environment Variables
 
 
 | Variable                 | Default  | Description                                                          |
 | ------------------------ | -------- | -------------------------------------------------------------------- |
-| `GITHUB_TOKEN`           | —        | GitHub personal access token for PR creation and sync (required for `fan-out`, `sync`). |
+| `GITHUB_TOKEN`           | —        | GitHub personal access token for PR creation and sync (required for `apply`, `sync`). |
 | `ALC_AGENT_BACKEND`      | `claude` | Agent backend. Set to `dry-run` to print commands without executing. |
 | `ALC_AGENT_TIMEOUT_SECS` | `600`    | Timeout in seconds for agent invocation.                             |
 | `RUST_LOG`               | `info`   | Log level filter (standard `tracing` env filter syntax).             |
@@ -210,10 +214,8 @@ src/
 ├── github.rs        — GitHub API operations via octocrab
 ├── agent.rs         — AI agent invocation (claude CLI or dry-run)
 ├── propose.rs       — centralised planning command
-├── fan_out.rs       — distribute to target repos
-├── apply.rs         — invoke agent per target in dependency order
-├── archive.rs       — archive completed change
-├── sync.rs          — sync PR state from GitHub
+├── apply.rs         — distribute specs, open PRs, invoke agent per target
+├── sync.rs          — sync PR state from GitHub, auto-archive when done
 ├── brief.rs         — change brief generation
 ├── output.rs        — display helpers (status tables, dry-run banners)
 ├── util.rs          — TempDir, load_toml helper

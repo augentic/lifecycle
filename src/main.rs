@@ -2,12 +2,10 @@
 
 mod agent;
 mod apply;
-mod archive;
 mod brief;
 mod cli;
 mod context;
 mod engine;
-mod fan_out;
 mod git;
 mod github;
 mod output;
@@ -59,9 +57,6 @@ async fn run() -> Result<()> {
         Command::Propose { change, description, dry_run } => {
             propose::run(&change, &description, dry_run, &session).await?;
         }
-        Command::FanOut { change, dry_run } => {
-            fan_out::run(&change, dry_run, &session).await?;
-        }
         Command::Apply { change, target, dry_run, continue_on_failure } => {
             apply::run(&change, target.as_deref(), dry_run, continue_on_failure, &session).await?;
         }
@@ -76,9 +71,6 @@ async fn run() -> Result<()> {
         Command::List => {
             let changes_dir = session.workspace.join(session.engine.changes_dir());
             list_changes(&changes_dir)?;
-        }
-        Command::Archive { change, dry_run } => {
-            archive::run(&change, dry_run, &session)?;
         }
         Command::Sync { change, mark_ready } => {
             sync::run(&change, mark_ready, &session).await?;

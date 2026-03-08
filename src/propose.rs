@@ -42,7 +42,7 @@ pub async fn run(change: &str, description: &str, dry_run: bool, session: &Sessi
     verify_artifacts(&change_dir, session)?;
 
     println!("planning artefacts generated at {}", change_dir.display());
-    println!("next step: review artefacts, then run `alc fan-out {change}`");
+    println!("next step: review artefacts, then run `alc apply {change}`");
     Ok(())
 }
 
