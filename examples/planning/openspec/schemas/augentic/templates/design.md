@@ -1,4 +1,24 @@
-# Technical Design
+## Context
+
+<!-- Background and current state -->
+
+## Goals / Non-Goals
+
+**Goals:**
+<!-- What this design aims to achieve -->
+
+**Non-Goals:**
+<!-- What is explicitly out of scope -->
+
+## Decisions
+
+<!-- Key design decisions and rationale -->
+
+## Risks / Trade-offs
+
+<!-- Known risks and trade-offs -->
+
+<!-- # Technical Design
 
 Document the technical approach for implementing the spec changes.
 
@@ -46,4 +66,4 @@ Document the technical approach for implementing the spec changes.
 - Routes/topics to remove
 - Import changes
 
-Use mermaid diagrams for entity relationships and sequence flows.
+Use mermaid diagrams for entity relationships and sequence flows. -->
