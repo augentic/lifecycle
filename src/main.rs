@@ -1,30 +1,12 @@
-//! `alc` — multi-repo orchestration CLI for spec-driven development.
-
-mod agent;
-mod apply;
-mod brief;
-mod cli;
-mod context;
-mod engine;
-mod git;
-mod github;
-mod output;
-mod pipeline;
-mod propose;
-mod registry;
-mod session;
-mod status;
-mod archive;
-mod util;
-mod workspace;
-
 use anyhow::{Result, bail};
 use clap::Parser;
 
-use cli::{Cli, Command, RegistryAction};
-use context::ChangeContext;
-use registry::Registry;
-use session::Session;
+use alc::cli::{Cli, Command, RegistryAction};
+use alc::context::ChangeContext;
+use alc::engine::opsx::OpsxEngine;
+use alc::registry::Registry;
+use alc::session::Session;
+use alc::{apply, archive, output, propose, workspace};
 
 async fn run() -> Result<()> {
     let cli = Cli::parse();
@@ -106,7 +88,7 @@ fn init_workspace() -> Result<()> {
         bail!("registry.toml already exists in the current directory");
     }
 
-    let engine = engine::opsx::OpsxEngine;
+    let engine = OpsxEngine;
     let template = r#"# Service registry — add one [[services]] entry per target service.
 # See: https://github.com/augentic/lifecycle#registrytoml
 
