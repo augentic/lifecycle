@@ -7,5 +7,3 @@ target/
 rustc-ice-*
 .DS_Store
 
-# Generated example output
-/examples/repo/
