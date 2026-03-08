@@ -120,7 +120,9 @@ fn checkout_existing_sync(repo_dir: &Path, branch: &str) -> Result<()> {
 }
 
 /// Stage all changes, commit, and push to the remote branch.
-pub async fn add_commit_push(repo_dir: &Path, message: &str, branch: &str) -> Result<()> {
+/// Returns `Ok(true)` if changes were committed and pushed, `Ok(false)` if the
+/// working tree had no changes (nothing to commit).
+pub async fn add_commit_push(repo_dir: &Path, message: &str, branch: &str) -> Result<bool> {
     let dir = repo_dir.to_path_buf();
     let msg = message.to_string();
     let branch = branch.to_string();
@@ -129,7 +131,7 @@ pub async fn add_commit_push(repo_dir: &Path, message: &str, branch: &str) -> Re
         .context("join commit-push task")?
 }
 
-fn add_commit_push_sync(repo_dir: &Path, message: &str, branch: &str) -> Result<()> {
+fn add_commit_push_sync(repo_dir: &Path, message: &str, branch: &str) -> Result<bool> {
     let repo = git2::Repository::open(repo_dir)
         .with_context(|| format!("opening repo at {}", repo_dir.display()))?;
 
@@ -140,9 +142,13 @@ fn add_commit_push_sync(repo_dir: &Path, message: &str, branch: &str) -> Result<
     index.write().context("writing index")?;
 
     let tree_oid = index.write_tree().context("writing tree")?;
-    let tree = repo.find_tree(tree_oid).context("finding tree")?;
-
     let head = repo.head().context("reading HEAD")?.peel_to_commit().context("peeling HEAD to commit")?;
+
+    if head.tree_id() == tree_oid {
+        return Ok(false);
+    }
+
+    let tree = repo.find_tree(tree_oid).context("finding tree")?;
     let sig = repo
         .signature()
         .or_else(|_| git2::Signature::now("alc", "alc@augentic.io"))
@@ -159,7 +165,7 @@ fn add_commit_push_sync(repo_dir: &Path, message: &str, branch: &str) -> Result<
         .push(&[&refspec], Some(&mut push_opts))
         .with_context(|| format!("pushing to origin/{branch}"))?;
 
-    Ok(())
+    Ok(true)
 }
 
 /// Parse a GitHub PR URL into (owner, repo, pr_number).

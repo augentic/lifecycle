@@ -12,6 +12,7 @@ impl TempDir {
         if dir.exists() {
             std::fs::remove_dir_all(&dir)?;
         }
+        std::fs::create_dir_all(&dir)?;
         Ok(Self(dir))
     }
 

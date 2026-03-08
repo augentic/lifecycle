@@ -1,15 +1,13 @@
-use std::path::Path;
-
 use anyhow::{Context, Result, bail};
 
 use crate::context::ChangeContext;
-use crate::engine::Engine;
+use crate::session::Session;
 use crate::{output, status};
 
 /// Archive a completed change: verify all target PRs are merged, then move
 /// the change folder to the archive directory.
-pub fn run(change: &str, dry_run: bool, engine: &dyn Engine, workspace: &Path) -> Result<()> {
-    let ctx = ChangeContext::load(workspace, engine, change)?;
+pub fn run(change: &str, dry_run: bool, session: &Session) -> Result<()> {
+    let ctx = ChangeContext::load(session, change)?;
 
     let not_merged: Vec<_> = ctx
         .status
@@ -26,9 +24,10 @@ pub fn run(change: &str, dry_run: bool, engine: &dyn Engine, workspace: &Path) -
         bail!("cannot archive: targets not yet merged: {}", names.join(", "));
     }
 
-    let archive_dest = workspace
-        .join(engine.archive_dir())
-        .join(engine.archive_dirname(change));
+    let archive_dest = session
+        .workspace
+        .join(session.engine.archive_dir())
+        .join(session.engine.archive_dirname(change));
 
     if dry_run {
         output::dry_run_banner("archive", change);

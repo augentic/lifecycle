@@ -2,14 +2,12 @@ use std::path::Path;
 
 use anyhow::{Context, Result, bail};
 
+use crate::session::Session;
 use crate::util::TempDir;
-use crate::engine::Engine;
 use crate::{agent, git, output, registry};
 
-pub async fn run(
-    change: &str, description: &str, dry_run: bool, engine: &dyn Engine, workspace: &Path,
-) -> Result<()> {
-    let changes_dir = workspace.join(engine.changes_dir());
+pub async fn run(change: &str, description: &str, dry_run: bool, session: &Session) -> Result<()> {
+    let changes_dir = session.workspace.join(session.engine.changes_dir());
     let change_dir = changes_dir.join(change);
 
     if change_dir.exists() {
@@ -20,10 +18,10 @@ pub async fn run(
         format!("creating change scaffold under {}", change_dir.display())
     })?;
 
-    let reg = registry::Registry::load(&workspace.join("registry.toml"))?;
-    let context = gather_context(workspace, engine, &reg).await?;
+    let reg = registry::Registry::load(&session.workspace.join("registry.toml"))?;
+    let context = gather_context(session, &reg).await?;
 
-    let prompt = engine.propose_prompt(change, description, &context);
+    let prompt = session.engine.propose_prompt(change, description, &context);
 
     if dry_run {
         output::dry_run_banner("propose", change);
@@ -34,12 +32,12 @@ pub async fn run(
         return Ok(());
     }
 
-    let succeeded = agent::invoke(&prompt, workspace).await?;
+    let succeeded = agent::invoke(&prompt, &session.workspace).await?;
     if !succeeded {
         bail!("proposal agent failed for change '{change}'");
     }
 
-    verify_artifacts(&change_dir, engine)?;
+    verify_artifacts(&change_dir, session)?;
 
     println!("planning artefacts generated at {}", change_dir.display());
     println!("next step: review artefacts, then run `alc fan-out {change}`");
@@ -48,9 +46,7 @@ pub async fn run(
 
 /// Gather platform context for the propose prompt:
 /// registry summary + current specs from target repos.
-async fn gather_context(
-    workspace: &Path, engine: &dyn Engine, reg: &registry::Registry,
-) -> Result<String> {
+async fn gather_context(session: &Session, reg: &registry::Registry) -> Result<String> {
     let mut ctx = String::from("=== REGISTRY ===\n");
     for svc in &reg.services {
         ctx.push_str(&format!(
@@ -72,7 +68,7 @@ async fn gather_context(
             continue;
         }
 
-        let repo_specs = try_read_repo_specs(workspace, &svc.repo, engine).await;
+        let repo_specs = try_read_repo_specs(session, &svc.repo).await;
         if let Some(specs_content) = repo_specs {
             ctx.push_str(&format!("\n--- repo: {} ---\n{}\n", svc.repo, specs_content));
         }
@@ -83,14 +79,12 @@ async fn gather_context(
 
 /// Try to read specs from a target repo. Looks for the repo as a sibling
 /// directory first (workspace layout), otherwise clones shallowly.
-async fn try_read_repo_specs(
-    workspace: &Path, repo_url: &str, engine: &dyn Engine,
-) -> Option<String> {
+async fn try_read_repo_specs(session: &Session, repo_url: &str) -> Option<String> {
     let repo_name = repo_url.rsplit('/').next().unwrap_or("repo").trim_end_matches(".git");
 
-    if let Some(parent) = workspace.parent() {
+    if let Some(parent) = session.workspace.parent() {
         let sibling = parent.join(repo_name);
-        let specs_dir = sibling.join(engine.specs_dir());
+        let specs_dir = sibling.join(session.engine.specs_dir());
         if specs_dir.is_dir() {
             match read_specs_dir(&specs_dir) {
                 Ok(content) => return Some(content),
@@ -110,7 +104,7 @@ async fn try_read_repo_specs(
     };
 
     if git::clone_shallow(repo_url, tmp.path()).await.is_ok() {
-        let specs_dir = tmp.path().join(engine.specs_dir());
+        let specs_dir = tmp.path().join(session.engine.specs_dir());
         if specs_dir.is_dir() {
             match read_specs_dir(&specs_dir) {
                 Ok(content) => return Some(content),
@@ -152,8 +146,8 @@ fn collect_md_files(dir: &Path) -> Result<Vec<std::path::PathBuf>> {
     Ok(files)
 }
 
-fn verify_artifacts(change_dir: &Path, engine: &dyn Engine) -> Result<()> {
-    for required in engine.required_artifacts() {
+fn verify_artifacts(change_dir: &Path, session: &Session) -> Result<()> {
+    for required in session.engine.required_artifacts() {
         let path = change_dir.join(required);
         if !path.exists() {
             bail!("missing generated artefact: {}", path.display());

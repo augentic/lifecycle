@@ -1,11 +1,4 @@
-use clap::{Parser, Subcommand, ValueEnum};
-
-/// Supported spec engines.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, ValueEnum)]
-pub enum EngineKind {
-    #[default]
-    Opsx,
-}
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
@@ -29,9 +22,6 @@ pub struct Cli {
     /// Max concurrent repo operations (fan-out, apply)
     #[arg(long, short = 'j', global = true, default_value = "4")]
     pub concurrency: usize,
-    /// Spec engine to use
-    #[arg(long, global = true, default_value = "opsx", value_enum)]
-    pub engine: EngineKind,
     #[command(subcommand)]
     pub command: Command,
 }

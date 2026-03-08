@@ -3,7 +3,7 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::engine::Engine;
+use crate::engine::opsx::OpsxEngine;
 use crate::pipeline::RepoGroup;
 
 /// Per-repo artefact summarising what the change means for this repo group.
@@ -44,7 +44,7 @@ pub struct BriefUpstream {
 }
 
 /// Build a change brief for a repo group, using engine-provided paths.
-pub fn generate(change_name: &str, group: &RepoGroup, engine: &dyn Engine) -> ChangeBrief {
+pub fn generate(change_name: &str, group: &RepoGroup, engine: &OpsxEngine) -> ChangeBrief {
     let paths = engine.upstream_paths();
     ChangeBrief {
         change: BriefChange {
@@ -92,6 +92,7 @@ mod tests {
             repo: String::from("git@github.com:org/train.git"),
             project_dir: String::from("."),
             domain: String::from("train"),
+            branch: None,
             targets: vec![Target {
                 id: String::from("r9k-connector"),
                 specs: vec![String::from("r9k-xml-ingest")],

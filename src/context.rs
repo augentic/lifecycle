@@ -1,10 +1,10 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use anyhow::Result;
 
-use crate::engine::Engine;
 use crate::pipeline::{Pipeline, RepoGroup};
 use crate::registry::Registry;
+use crate::session::Session;
 use crate::status::PipelineStatus;
 
 /// Shared context for all commands that operate on an existing change.
@@ -13,10 +13,6 @@ use crate::status::PipelineStatus;
 /// eliminating the repeated preamble across fan-out, apply, sync, archive,
 /// and status commands.
 pub struct ChangeContext {
-    /// Workspace root (directory containing `registry.toml`).
-    pub workspace: PathBuf,
-    /// Change identifier.
-    pub change: String,
     /// Path to the change directory (specs, pipeline, status).
     pub change_dir: PathBuf,
     /// Path to `status.toml`.
@@ -31,17 +27,15 @@ pub struct ChangeContext {
 
 impl ChangeContext {
     /// Load pipeline, registry, and status for a change, validating integrity.
-    pub fn load(workspace: &Path, engine: &dyn Engine, change: &str) -> Result<Self> {
-        let change_dir = workspace.join(engine.changes_dir()).join(change);
+    pub fn load(session: &Session, change: &str) -> Result<Self> {
+        let change_dir = session.engine.change_dir(&session.workspace, change);
         let pipeline = Pipeline::load(&change_dir.join("pipeline.toml"))?;
-        let registry = Registry::load(&workspace.join("registry.toml"))?;
+        let registry = Registry::load(&session.workspace.join("registry.toml"))?;
         pipeline.validate(&registry, &change_dir)?;
         let status_path = change_dir.join("status.toml");
         let status =
             PipelineStatus::load_or_create(&status_path, change, &pipeline, &registry)?;
         Ok(Self {
-            workspace: workspace.to_path_buf(),
-            change: change.to_string(),
             change_dir,
             status_path,
             pipeline,

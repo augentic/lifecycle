@@ -63,6 +63,8 @@ pub struct RepoGroup {
     pub repo: String,
     pub project_dir: String,
     pub domain: String,
+    /// Explicit branch override shared by all targets in this group, if any.
+    pub branch: Option<String>,
     pub targets: Vec<Target>,
     pub crates: Vec<String>,
     pub specs: Vec<String>,
@@ -70,12 +72,10 @@ pub struct RepoGroup {
 
 impl RepoGroup {
     /// Derive the branch name for this group's change.
-    /// Uses an explicit `branch` from the first target if set, otherwise `alc/<change>`.
+    /// Uses the validated branch override if set, otherwise `alc/<change>`.
     pub fn branch_name(&self, change: &str) -> String {
-        self.targets
-            .first()
-            .and_then(|t| t.branch.as_deref())
-            .map(String::from)
+        self.branch
+            .clone()
             .unwrap_or_else(|| format!("alc/{change}"))
     }
 

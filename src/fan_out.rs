@@ -1,13 +1,12 @@
-use std::path::Path;
-
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
 
 use crate::context::ChangeContext;
-use crate::util::TempDir;
-use crate::engine::{DistributeContext, Engine};
+use crate::engine::DistributeContext;
 use crate::pipeline::RepoGroup;
+use crate::session::Session;
 use crate::status::TargetState;
+use crate::util::TempDir;
 use crate::{git, github, output, status};
 
 /// Result of a single repo group fan-out: per-target state updates.
@@ -15,10 +14,8 @@ struct FanOutResult {
     updates: Vec<(String, TargetState, String)>,
 }
 
-pub async fn run(
-    change: &str, dry_run: bool, concurrency: usize, engine: &dyn Engine, workspace: &Path,
-) -> Result<()> {
-    let mut ctx = ChangeContext::load(workspace, engine, change)?;
+pub async fn run(change: &str, dry_run: bool, session: &Session) -> Result<()> {
+    let mut ctx = ChangeContext::load(session, change)?;
     let groups = ctx.groups()?;
 
     if dry_run {
@@ -50,19 +47,15 @@ pub async fn run(
     let total = pending_groups.len();
     tracing::info!(total, "distributing to repo groups");
 
-    let workspace_buf = workspace.to_path_buf();
-    let change_str = change.to_string();
-
     let results: Vec<Result<FanOutResult>> = stream::iter(pending_groups.into_iter().enumerate())
         .map(|(idx, group)| {
-            let ws = workspace_buf.clone();
-            let ch = change_str.clone();
+            let ch = change.to_string();
             async move {
                 tracing::info!("[{}/{}] {}", idx + 1, total, group.repo);
-                fan_out_group(&ch, &group, engine, &ws).await
+                fan_out_group(&ch, &group, session).await
             }
         })
-        .buffer_unordered(concurrency)
+        .buffer_unordered(session.concurrency)
         .collect()
         .await;
 
@@ -95,9 +88,7 @@ pub async fn run(
     Ok(())
 }
 
-async fn fan_out_group(
-    change: &str, group: &RepoGroup, engine: &dyn Engine, workspace: &Path,
-) -> Result<FanOutResult> {
+async fn fan_out_group(change: &str, group: &RepoGroup, session: &Session) -> Result<FanOutResult> {
     tracing::info!(repo = %group.repo, crates = ?group.crates, "distributing");
 
     let tmp = TempDir::new(&group.repo_label())?;
@@ -111,16 +102,17 @@ async fn fan_out_group(
     }
 
     let dist_ctx = DistributeContext {
-        workspace,
+        workspace: &session.workspace,
         change,
         repo_dir: tmp.path(),
         group,
     };
-    engine.distribute(&dist_ctx)?;
+    session.engine.distribute(&dist_ctx)?;
 
     let commit_msg = format!("alc: distribute {change} for {}", group.crates.join(", "));
     git::add_commit_push(tmp.path(), &commit_msg, &branch).await?;
 
+    let gh = session.github()?;
     let (owner, repo_name) = git::parse_repo_url(&group.repo)?;
     let base = git::default_branch(tmp.path()).await?;
     let pr_title = format!("alc: {change} — {}", group.crates.join(", "));
@@ -130,7 +122,8 @@ async fn fan_out_group(
         group.specs.join(", "),
     );
     let pr_url =
-        github::create_draft_pr(&owner, &repo_name, &branch, &base, &pr_title, &pr_body).await?;
+        github::create_draft_pr(gh, &owner, &repo_name, &branch, &base, &pr_title, &pr_body)
+            .await?;
 
     tracing::info!(repo = %group.repo, pr = %pr_url, "distributed");
 

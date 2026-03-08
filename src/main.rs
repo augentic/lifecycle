@@ -12,6 +12,7 @@ mod output;
 mod pipeline;
 mod propose;
 mod registry;
+mod session;
 mod status;
 mod sync;
 mod util;
@@ -20,11 +21,10 @@ mod workspace;
 use anyhow::{Result, bail};
 use clap::Parser;
 
-use cli::{Cli, Command, EngineKind, RegistryAction};
+use cli::{Cli, Command, RegistryAction};
 use context::ChangeContext;
-use engine::Engine;
-use engine::opsx::OpsxEngine;
 use registry::Registry;
+use session::Session;
 
 async fn run() -> Result<()> {
     let cli = Cli::parse();
@@ -50,45 +50,39 @@ async fn run() -> Result<()> {
     }
 
     let workspace = workspace::find_root()?;
-    let concurrency = cli.concurrency;
-
-    let engine: Box<dyn Engine> = match cli.engine {
-        EngineKind::Opsx => Box::new(OpsxEngine),
-    };
-
-    let engine: &dyn Engine = &*engine;
+    let session = Session::new(workspace, cli.concurrency);
 
     match cli.command {
         Command::Init => unreachable!(),
         Command::Propose { change, description, dry_run } => {
-            propose::run(&change, &description, dry_run, engine, &workspace).await?;
+            propose::run(&change, &description, dry_run, &session).await?;
         }
         Command::FanOut { change, dry_run } => {
-            fan_out::run(&change, dry_run, concurrency, engine, &workspace).await?;
+            fan_out::run(&change, dry_run, &session).await?;
         }
         Command::Apply { change, target, dry_run, continue_on_failure } => {
-            apply::run(&change, target.as_deref(), dry_run, continue_on_failure, concurrency, engine, &workspace).await?;
+            apply::run(&change, target.as_deref(), dry_run, continue_on_failure, &session).await?;
         }
         Command::Status { change } => {
-            let ctx = ChangeContext::load(&workspace, engine, &change)?;
+            let ctx = ChangeContext::load(&session, &change)?;
             output::print_status_summary(&ctx.status);
         }
         Command::Validate { change } => {
-            let _ctx = ChangeContext::load(&workspace, engine, &change)?;
+            let _ctx = ChangeContext::load(&session, &change)?;
             println!("change '{change}' is valid: pipeline, registry, and status are consistent");
         }
         Command::List => {
-            let changes_dir = workspace.join(engine.changes_dir());
+            let changes_dir = session.workspace.join(session.engine.changes_dir());
             list_changes(&changes_dir)?;
         }
         Command::Archive { change, dry_run } => {
-            archive::run(&change, dry_run, engine, &workspace)?;
+            archive::run(&change, dry_run, &session)?;
         }
         Command::Sync { change, mark_ready } => {
-            sync::run(&change, mark_ready, engine, &workspace).await?;
+            sync::run(&change, mark_ready, &session).await?;
         }
         Command::Registry { action } => {
-            let reg = Registry::load(&workspace.join("registry.toml"))?;
+            let reg = Registry::load(&session.workspace.join("registry.toml"))?;
             match action {
                 RegistryAction::List => output::print_registry(&reg),
                 RegistryAction::Query { domain, cap } => {
@@ -118,6 +112,7 @@ fn init_workspace() -> Result<()> {
         bail!("registry.toml already exists in the current directory");
     }
 
+    let engine = engine::opsx::OpsxEngine;
     let template = r#"# Service registry — add one [[services]] entry per target service.
 # See: https://github.com/augentic/lifecycle#registrytoml
 
@@ -130,13 +125,13 @@ fn init_workspace() -> Result<()> {
 # capabilities = ["ingest"]
 "#;
     std::fs::write(registry_path, template).context("writing registry.toml")?;
-    std::fs::create_dir_all("openspec/changes").context("creating openspec/changes")?;
-    std::fs::create_dir_all("openspec/specs").context("creating openspec/specs")?;
+    std::fs::create_dir_all(engine.changes_dir()).context("creating changes directory")?;
+    std::fs::create_dir_all(engine.specs_dir()).context("creating specs directory")?;
 
     println!("initialised alc workspace:");
     println!("  registry.toml        — add your services here");
-    println!("  openspec/changes/    — change artefacts");
-    println!("  openspec/specs/      — shared specs");
+    println!("  {}/    — change artefacts", engine.changes_dir());
+    println!("  {}/      — shared specs", engine.specs_dir());
     Ok(())
 }
 

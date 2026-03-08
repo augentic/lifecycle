@@ -23,6 +23,7 @@ impl Pipeline {
                 repo: repo.to_string(),
                 project_dir: project_dir.to_string(),
                 domain: svc.domain.clone(),
+                branch: target.branch.clone(),
                 targets: Vec::new(),
                 crates: Vec::new(),
                 specs: Vec::new(),
@@ -39,6 +40,16 @@ impl Pipeline {
                     "target '{}' has domain '{}' but repo group '{}' uses '{}'",
                     target.id, svc.domain, repo, group.domain
                 );
+            }
+            match (&group.branch, &target.branch) {
+                (Some(existing), Some(incoming)) if existing != incoming => {
+                    bail!(
+                        "target '{}' has branch '{}' but repo group '{}' already uses branch '{}'",
+                        target.id, incoming, repo, existing
+                    );
+                }
+                (None, Some(b)) => group.branch = Some(b.clone()),
+                _ => {}
             }
 
             group.targets.push(target.clone());

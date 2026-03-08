@@ -1,260 +1,125 @@
 # Lifecycle Repo Review
 
-## Recommendation
+## Summary
 
-Keep the system intentionally narrower than it currently claims to be.
+The repository has a good small-module shape and a clear happy-path workflow. `README.md` makes the intended lifecycle easy to follow, and the split between `propose`, `fan-out`, `apply`, `sync`, and `archive` keeps the codebase navigable.
 
-The repo is already small and readable, which is a strength. The main missed opportunity is that the design advertises more flexibility than the implementation actually supports. That extra surface area makes the tool harder to trust, harder to explain, and harder to extend safely.
-
-The simplest path forward is:
-
-1. Pick one orchestration unit and use it consistently end to end
-2. Remove or defer knobs that are parsed but not operational
-3. Either make the engine boundary real, or describe the tool as OPSX-specific for now
-
-## What Is Working Well
-
-- The codebase is compact and easy to scan.
-- Core concepts are separated into sensible modules: `registry`, `pipeline`, `status`, `git`, `agent`.
-- The CLI workflow is easy to explain: `propose -> fan-out -> apply -> sync -> archive`.
-- The repo-level grouping idea is good and matches how users think about branches and PRs.
-- The `pipeline` and `status` modules are the clearest parts of the design and form a decent base for future refinement.
+The main design weakness is conceptual drift between the public model and the actual implementation. Several concepts look more general than the system really is today, which increases cognitive load and makes iterative enhancement riskier than it needs to be.
 
 ## Main Findings
 
-### 1. The execution unit is inconsistent
+### 1. `apply` can report success when the remote state is stale
 
-`fan_out` works at the repo-group level, but `apply` works at the target level.
+In `src/apply.rs`, a successful agent run is treated as implementation success even if `git::add_commit_push()` fails. That means auth problems, push conflicts, or branch issues can leave the PR unchanged while `status.toml` records the target as `implemented`.
 
-That mismatch creates avoidable complexity:
+This is the highest-risk behavior mismatch in the repo because it weakens the reliability of the status model.
 
-- one repo can be cloned multiple times during apply
-- one branch can receive multiple repo-wide apply passes
-- retries and idempotence become harder to reason about
-- status becomes noisier than the actual GitHub workflow
+### 2. `project_dir` is modeled but not really honored
 
-This is the largest simplification opportunity in the repo.
+The schema and docs present `project_dir` as a first-class concept, which suggests support for monorepos or nested crates. In practice, distribution writes `.opsx` at the repo root and `apply` invokes the agent at the repo root as well.
 
-If a shared repo gets one branch and one PR, it should usually also get one apply execution. Within that execution, the agent can still be told which services or crates are affected.
+That makes the mental model harder to trust:
 
-### 2. The model promises monorepo flexibility that the runtime does not really support
+- users can set `project_dir`
+- grouping validates `project_dir`
+- execution does not actually use it
 
-The pipeline and registry both carry `project_dir`, per-target overrides, and branch information. The README also documents those fields as meaningful. But the operational flow mostly clones the repo and runs from repo root.
+Either remove this concept until it is real, or wire it through end-to-end.
 
-This creates a dangerous kind of complexity: conceptual complexity without corresponding behavior.
+### 3. State is persisted per target, but work happens per repo group
 
-Today the code seems best described as:
+The runtime unit is a repo group: one checkout, one branch, one PR, one agent run. The persisted state unit is a target. That forces the code to spread repo-level events across multiple target records and duplicates PR/repo metadata across status entries.
 
-- repo-level orchestration
-- root-level checkout and execution
-- optional per-target branch selection
+This is workable for the current scope, but it is an awkward foundation for:
 
-That is a valid MVP. The problem is pretending it is already a more general execution framework.
+- partial retries
+- richer PR metadata
+- repo-level logs and diagnostics
+- future review automation
 
-### 3. Status tracking is finer grained than the delivery mechanism
+The execution unit and persistence unit should match.
 
-The real delivery artifact is one PR per repo group, but status is tracked per target and the same PR URL is copied onto multiple targets.
+### 4. The `Engine` abstraction is broader than the current needs
 
-That means:
+There is only one engine implementation, but the code already pays the cost of a polymorphic abstraction across CLI parsing, dispatch, prompts, file layout, and archive naming.
 
-- review state is duplicated
-- sync repeats PR checks that refer to the same underlying object
-- progress reporting reflects internal modeling more than user reality
+This trait is not obviously wrong, but it appears early. At the current stage it adds indirection faster than it adds flexibility.
 
-For usability, a repo-level status model would likely be simpler:
+Missed simplification opportunity: keep `opsx` concrete until a second engine forces the seam, or narrow the abstraction to only the parts that genuinely vary.
 
-- repo group: branch, PR, review, merge, archive readiness
-- optional nested target detail for planning only
+### 5. `propose` gathers too much context too eagerly
 
-### 4. The engine abstraction is only partial
+`src/propose.rs` reads all services, deduplicates by repo, then loads every Markdown spec it can find from every referenced repo into a single prompt context.
 
-The code comments and README describe the orchestrator as engine-agnostic, but the implementation is still strongly OPSX-shaped:
+That is simple to implement, but it will age poorly:
 
-- `main.rs` hardwires `OpsxEngine`
-- `sync.rs` hardcodes `openspec/changes`
-- agent execution is tied to `OPSX_AGENT_BACKEND`
-- CLI behavior and prompts still assume OPSX semantics throughout
+- prompt size grows with the registry rather than with change scope
+- context relevance gets noisier over time
+- failures in spec discovery are easy to miss
+- the selection logic is hard to test independently
 
-This is not inherently bad. The issue is architectural ambiguity.
+This should probably become a more explicit context-selection step instead of a full-registry scrape.
 
-A simpler and clearer choice would be one of these:
+### 6. Dependencies have two overlapping representations
 
-1. Say explicitly that this tool is OPSX-first and keep the design concrete
-2. Finish pushing all path, artifact, and command assumptions behind the engine trait
+Execution edges can come from inline `depends_on` fields and from `[[dependencies]]`. The rich dependency model carries metadata, while the inline form only carries ordering.
 
-Right now it sits awkwardly between those two positions.
+That flexibility makes authoring easier in the short term, but it creates a double-entry model that future code has to merge, deduplicate, explain, and validate.
 
-### 5. The system exposes more configuration than it currently uses
+Missed simplification opportunity: pick one primary representation and derive the lighter-weight view from it.
 
-There are several examples of this:
+## Design Critique
 
-- `concurrency` exists in `pipeline.toml` but is not used
-- both inline `depends_on` and rich `[[dependencies]]` exist, even though only edge direction seems operational
-- `Archived` exists in the state machine, but archive just moves the change folder
-- multiple spec path shapes are accepted, but brief generation normalizes to only one path convention
+### What is already working well
 
-Each of these is small, but together they make the tool feel more abstract and less predictable.
+- Command boundaries are clear and readable.
+- `ChangeContext` is a good consolidation point.
+- Pipeline grouping and graph logic are easy to locate.
+- The README does a solid job explaining the happy path.
 
-The repo would be easier to understand if unsupported or inactive options were removed until needed.
+### Where the design feels misleading
 
-### 6. `propose` will get more expensive and less understandable as the registry grows
+- The public data model implies broader support than the runtime currently provides.
+- Repo-group behavior is central, but target-oriented persistence dominates the state model.
+- Engine pluggability is advertised in the architecture earlier than the rest of the system justifies.
 
-The current approach gathers registry info, then walks every unique repo and appends all spec Markdown it can find into a single context blob.
+These are not catastrophic issues, but they create friction for both users and future contributors because the simplest explanation of the system is not quite the true one.
 
-That is attractive in an MVP because it avoids pre-analysis, but it has clear scaling costs:
+## Recommendations
 
-- longer and noisier prompts
-- slower propose runs
-- less explainable impact analysis
-- more ways for irrelevant context to distort output
+### Highest priority
 
-For iterative enhancement, a staged approach would likely age better:
+1. Make `implemented` mean "agent succeeded and remote branch reflects the result".
+2. Align the persisted state model with repo groups, branches, and PRs.
+3. Either fully implement `project_dir` semantics or remove/defer it.
 
-1. identify candidate services from registry and description
-2. load only their local specs and nearby context
-3. generate the change artifacts from that narrower set
+### Next simplifications
 
-## Design Simplifications I Would Make
+1. Collapse or narrow the `Engine` abstraction until a second engine exists.
+2. Replace full-registry spec ingestion in `propose` with a scoped context selection step.
+3. Standardize dependency declaration on one source of truth.
 
-### Simplification 1: Make repo group the operational unit
+## Suggested Refactor Direction
 
-Use the same unit through:
+The cleanest next step is to make the execution unit explicit as a repo-level work item:
 
-- fan-out
-- apply
-- sync
-- archive readiness
+- one work item per repo group
+- branch, PR URL, and execution state stored once
+- target IDs attached as metadata
 
-Targets can remain in the planning artifact, but execution should operate on repo groups.
+That single shift would simplify `fan-out`, `apply`, `sync`, and status reporting together.
 
-### Simplification 2: Reduce the public data model to the behavior you actually support
-
-For example, keep only:
-
-- `id`
-- `repo`
-- `crate`
-- `capabilities`
-- `depends_on`
-- optional `branch`
-
-Then add `project_dir`, concurrency, or richer dependency metadata only when they become active in the runtime.
-
-### Simplification 3: Collapse duplicated state
-
-Prefer:
-
-- one repo-group status entry per PR-bearing unit
-- target-level details only where they materially affect execution order
-
-This would make `sync` and `status` outputs easier for users to interpret.
-
-### Simplification 4: Choose between “extensible” and “concrete”
-
-If extensibility matters now:
-
-- make the engine trait the true boundary
-- remove hardcoded OPSX paths from orchestration code
-- make backend selection engine-owned or command-owned, not globally OPSX-named
-
-If extensibility can wait:
-
-- rename concepts more concretely
-- remove the engine abstraction for now
-- reintroduce it later once a second engine exists
-
-The latter may actually be the better MVP.
-
-### Simplification 5: Separate planning richness from execution strictness
-
-It is fine for `pipeline.toml` to contain rich metadata for reviewers and future tooling. But the execution engine should consume a smaller, stricter subset that is unambiguous and fully implemented.
-
-That gives you room to evolve planning artifacts without making the runtime harder to reason about.
-
-## Specific Implementation Risks
-
-### Apply can report success after a failed push
-
-If the agent succeeds but `git add/commit/push` fails for a real reason, the target can still move to `implemented`.
-
-That is a correctness problem, not just a polish issue, because later commands trust that status.
-
-### Shared-repo apply likely repeats work
-
-Because the brief is generated from the repo group but invoked per target, multiple targets in the same repo are likely to receive overlapping instructions.
-
-This increases the chance of:
-
-- duplicate changes
-- confusing agent behavior
-- no-op commits mixed with real failures
-
-### `project_dir` is present but mostly inert
-
-This is exactly the kind of field that makes future enhancement harder because users will naturally start depending on it before it is truly supported.
-
-## Documentation Drift
-
-There are already signs of conceptual drift:
-
-- README contains command typos like `lc apply`
-- `CONTRIBUTING.md` still refers to `omnia`
-- design documents and the current code disagree in places about how much automation or abstraction exists
-
-That drift matters because this tool's value is mostly operational clarity. If users cannot tell what is aspirational versus what is implemented, they will form the wrong mental model very quickly.
+After that, the next best cleanup is to decide whether this tool is truly monorepo-aware. If yes, `project_dir` should shape distribution paths, agent invocation paths, and commit scope. If no, it should not be user-facing yet.
 
 ## Testing Gaps
 
-The test coverage is strongest in the pure data modules:
+The test coverage is strongest around parsing and graph/state helpers. The riskier workflow edges are less protected:
 
-- `pipeline`
-- `status`
-- `registry`
-- `brief`
+- `src/apply.rs`
+- `src/fan_out.rs`
+- `src/propose.rs`
+- `src/sync.rs`
+- `src/github.rs`
+- `src/agent.rs`
 
-The biggest untested areas are the orchestration edges:
-
-- shared-repo multi-target apply
-- push failure handling
-- branch and override behavior
-- repeated sync against the same PR
-- archive behavior versus status semantics
-
-Those are also the places where the design is currently most fragile.
-
-## Suggested Near-Term Roadmap
-
-### Phase 1: Make the MVP honest
-
-- Treat repo group as the apply unit
-- Fail apply if commit or push fails, unless the no-op case is detected explicitly
-- Remove or hide inactive fields from README and examples
-- Fix documentation drift and command typos
-
-### Phase 2: Simplify the status model
-
-- Introduce repo-group level status as the primary operational state
-- Keep target details as planning metadata, not the main runtime object
-- Make sync reason in terms of PR-bearing units
-
-### Phase 3: Decide the abstraction strategy
-
-Choose one:
-
-1. Commit to OPSX-specific implementation and simplify the code accordingly
-2. Commit to multi-engine support and finish the boundary cleanly
-
-Either is better than the current half-abstract position.
-
-## Bottom Line
-
-This repo is already close to a good MVP because it is small and conceptually focused. The main problem is not excessive code. It is excess implied generality.
-
-The best improvement is to make the implementation more opinionated:
-
-- one execution unit
-- one clear status model
-- one honest abstraction boundary
-- fewer inactive knobs
-
-That would make the tool easier to use immediately and much easier to evolve without accumulating accidental complexity.
+Those modules contain the failure modes most likely to matter during iterative enhancement.

@@ -2,29 +2,34 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 
-use super::{DistributeContext, Engine, UpstreamPaths};
+use super::{DistributeContext, UpstreamPaths};
 use crate::brief::{self, ChangeBrief};
+use crate::pipeline::RepoGroup;
 
 pub struct OpsxEngine;
 
-impl Engine for OpsxEngine {
-    fn name(&self) -> &str {
+impl OpsxEngine {
+    pub fn name(&self) -> &str {
         "opsx"
     }
 
-    fn specs_dir(&self) -> &str {
+    pub fn specs_dir(&self) -> &str {
         "openspec/specs"
     }
 
-    fn changes_dir(&self) -> &str {
+    pub fn changes_dir(&self) -> &str {
         "openspec/changes"
     }
 
-    fn archive_dir(&self) -> &str {
+    pub fn archive_dir(&self) -> &str {
         "openspec/changes/archive"
     }
 
-    fn propose_prompt(&self, change: &str, description: &str, context: &str) -> String {
+    pub fn change_dir(&self, workspace: &Path, change: &str) -> std::path::PathBuf {
+        workspace.join(self.changes_dir()).join(change)
+    }
+
+    pub fn propose_prompt(&self, change: &str, description: &str, context: &str) -> String {
         format!(
             concat!(
                 "Generate planning artefacts for change '{change}'.\n\n",
@@ -51,11 +56,11 @@ impl Engine for OpsxEngine {
         )
     }
 
-    fn required_artifacts(&self) -> Vec<&str> {
+    pub fn required_artifacts(&self) -> Vec<&str> {
         vec!["proposal.md", "design.md", "tasks.md", "pipeline.toml"]
     }
 
-    fn distribute(&self, ctx: &DistributeContext) -> Result<()> {
+    pub fn distribute(&self, ctx: &DistributeContext) -> Result<()> {
         let change_brief = brief::generate(ctx.change, ctx.group, self);
 
         let opsx_dir = ctx.repo_dir.join(".opsx");
@@ -63,13 +68,13 @@ impl Engine for OpsxEngine {
 
         brief::write(&change_brief, &opsx_dir.join("brief.toml"))?;
 
-        copy_specs(ctx.workspace, ctx.change, ctx.group, &opsx_dir)?;
-        copy_upstream(ctx.workspace, ctx.change, &opsx_dir)?;
+        copy_specs(self, ctx.workspace, ctx.change, ctx.group, &opsx_dir)?;
+        copy_upstream(self, ctx.workspace, ctx.change, &opsx_dir)?;
 
         Ok(())
     }
 
-    fn apply_command(&self, change: &str, brief: &ChangeBrief) -> String {
+    pub fn apply_command(&self, change: &str, brief: &ChangeBrief) -> String {
         let crates = brief.target.crates.join(", ");
         let specs: Vec<_> = brief.specs.files.iter().map(String::as_str).collect();
         format!(
@@ -91,11 +96,11 @@ impl Engine for OpsxEngine {
         )
     }
 
-    fn spec_file_path(&self, spec_name: &str) -> String {
+    pub fn spec_file_path(&self, spec_name: &str) -> String {
         format!("{spec_name}/spec.md")
     }
 
-    fn upstream_paths(&self) -> UpstreamPaths {
+    pub fn upstream_paths(&self) -> UpstreamPaths {
         UpstreamPaths {
             design: "upstream/design.md",
             tasks: "upstream/tasks.md",
@@ -103,15 +108,15 @@ impl Engine for OpsxEngine {
         }
     }
 
-    fn archive_dirname(&self, change: &str) -> String {
+    pub fn archive_dirname(&self, change: &str) -> String {
         format!("{}-{change}", chrono::Utc::now().format("%Y-%m-%d"))
     }
 }
 
-use crate::pipeline::RepoGroup;
-
-fn copy_specs(workspace: &Path, change: &str, group: &RepoGroup, dest_dir: &Path) -> Result<()> {
-    let central_specs = OpsxEngine.change_dir(workspace, change).join("specs");
+fn copy_specs(
+    engine: &OpsxEngine, workspace: &Path, change: &str, group: &RepoGroup, dest_dir: &Path,
+) -> Result<()> {
+    let central_specs = engine.change_dir(workspace, change).join("specs");
     if !central_specs.exists() {
         return Ok(());
     }
@@ -131,8 +136,10 @@ fn copy_specs(workspace: &Path, change: &str, group: &RepoGroup, dest_dir: &Path
     Ok(())
 }
 
-fn copy_upstream(workspace: &Path, change: &str, dest_dir: &Path) -> Result<()> {
-    let central = OpsxEngine.change_dir(workspace, change);
+fn copy_upstream(
+    engine: &OpsxEngine, workspace: &Path, change: &str, dest_dir: &Path,
+) -> Result<()> {
+    let central = engine.change_dir(workspace, change);
     let upstream = dest_dir.join("upstream");
     std::fs::create_dir_all(&upstream)?;
 

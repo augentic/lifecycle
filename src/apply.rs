@@ -1,14 +1,13 @@
 use std::collections::HashSet;
-use std::path::Path;
 
 use anyhow::{Context, Result, bail};
 use futures::stream::{self, StreamExt};
 
 use crate::context::ChangeContext;
-use crate::util::TempDir;
-use crate::engine::Engine;
 use crate::pipeline::RepoGroup;
+use crate::session::Session;
 use crate::status::TargetState;
+use crate::util::TempDir;
 use crate::{agent, brief, git, output, status};
 
 /// Result of applying a single repo group.
@@ -20,9 +19,9 @@ struct ApplyResult {
 
 pub async fn run(
     change: &str, target_filter: Option<&str>, dry_run: bool, continue_on_failure: bool,
-    concurrency: usize, engine: &dyn Engine, workspace: &Path,
+    session: &Session,
 ) -> Result<()> {
-    let mut ctx = ChangeContext::load(workspace, engine, change)?;
+    let mut ctx = ChangeContext::load(session, change)?;
     let levels = ctx.pipeline.dependency_levels(&ctx.registry)?;
 
     let levels: Vec<Vec<RepoGroup>> = if let Some(filter) = target_filter {
@@ -50,7 +49,7 @@ pub async fn run(
 
     if dry_run {
         let all_groups: Vec<&RepoGroup> = levels.iter().flat_map(|l| l.iter()).collect();
-        print_dry_run(change, &all_groups, engine, &ctx);
+        print_dry_run(change, &all_groups, session, &ctx);
         return Ok(());
     }
 
@@ -118,9 +117,9 @@ pub async fn run(
         let results: Vec<ApplyResult> = stream::iter(actionable)
             .map(|group| {
                 let change = change.to_string();
-                async move { apply_group(&change, group, engine).await }
+                async move { apply_group(&change, group, session).await }
             })
-            .buffer_unordered(concurrency)
+            .buffer_unordered(session.concurrency)
             .collect()
             .await;
 
@@ -152,8 +151,8 @@ pub async fn run(
     Ok(())
 }
 
-async fn apply_group(change: &str, group: &RepoGroup, engine: &dyn Engine) -> ApplyResult {
-    match apply_group_inner(change, group, engine).await {
+async fn apply_group(change: &str, group: &RepoGroup, session: &Session) -> ApplyResult {
+    match apply_group_inner(change, group, session).await {
         Ok(updates) => ApplyResult {
             repo: group.repo.clone(),
             updates,
@@ -175,7 +174,7 @@ async fn apply_group(change: &str, group: &RepoGroup, engine: &dyn Engine) -> Ap
 }
 
 async fn apply_group_inner(
-    change: &str, group: &RepoGroup, engine: &dyn Engine,
+    change: &str, group: &RepoGroup, session: &Session,
 ) -> Result<Vec<(String, TargetState)>> {
     tracing::info!(repo = %group.repo, crates = ?group.crates, "applying");
 
@@ -186,17 +185,22 @@ async fn apply_group_inner(
         .await
         .with_context(|| format!("checking out branch {branch}"))?;
 
-    let change_brief = brief::generate(change, group, engine);
-    let apply_cmd = engine.apply_command(change, &change_brief);
+    let change_brief = brief::generate(change, group, &session.engine);
+    let apply_cmd = session.engine.apply_command(change, &change_brief);
     let succeeded = agent::invoke(&apply_cmd, tmp.path()).await?;
 
     if succeeded {
         let msg = format!("alc: implement {change} for {}", group.crates.join(", "));
-        if let Err(e) = git::add_commit_push(tmp.path(), &msg, &branch).await {
-            tracing::warn!(repo = %group.repo, error = %e, "push failed (possibly no changes)");
+        let pushed = git::add_commit_push(tmp.path(), &msg, &branch)
+            .await
+            .with_context(|| format!("commit/push failed for repo '{}'", group.repo))?;
+
+        if pushed {
+            tracing::info!(repo = %group.repo, "implemented and pushed");
+        } else {
+            tracing::info!(repo = %group.repo, "implemented (no changes to commit)");
         }
 
-        tracing::info!(repo = %group.repo, "implemented");
         Ok(group
             .targets
             .iter()
@@ -208,19 +212,25 @@ async fn apply_group_inner(
 }
 
 /// Check whether any target in this group has an upstream dependency
-/// (in another group) that is not yet Implemented.
+/// (in another group) that is not yet Implemented. Uses all dependency edges
+/// (`depends_on` and `[[dependencies]]`) to stay consistent with topological sort.
 fn is_blocked_by_upstream(group: &RepoGroup, ctx: &ChangeContext) -> bool {
     let group_target_ids: HashSet<&str> =
         group.targets.iter().map(|t| t.id.as_str()).collect();
 
+    let all_edges = ctx.pipeline.all_edges();
+
     for target in &group.targets {
-        for dep in &target.depends_on {
-            if group_target_ids.contains(dep.as_str()) {
+        for (from, to) in &all_edges {
+            if *to != target.id {
+                continue;
+            }
+            if group_target_ids.contains(*from) {
                 continue;
             }
             let met = ctx
                 .status
-                .get(dep)
+                .get(*from)
                 .map(|s| s.state.is_at_least(status::TargetState::Implemented))
                 .unwrap_or(false);
             if !met {
@@ -231,7 +241,7 @@ fn is_blocked_by_upstream(group: &RepoGroup, ctx: &ChangeContext) -> bool {
     false
 }
 
-fn print_dry_run(change: &str, groups: &[&RepoGroup], engine: &dyn Engine, ctx: &ChangeContext) {
+fn print_dry_run(change: &str, groups: &[&RepoGroup], session: &Session, ctx: &ChangeContext) {
     output::dry_run_banner("apply", change);
 
     for group in groups {
@@ -245,8 +255,8 @@ fn print_dry_run(change: &str, groups: &[&RepoGroup], engine: &dyn Engine, ctx: 
                 .unwrap_or_else(|| "unknown".to_string());
             println!("  target: {} (state={})", t.id, state);
         }
-        let change_brief = brief::generate(change, group, engine);
-        let cmd = engine.apply_command(change, &change_brief);
+        let change_brief = brief::generate(change, group, &session.engine);
+        let cmd = session.engine.apply_command(change, &change_brief);
         println!("  command: {}", cmd.lines().next().unwrap_or(""));
         println!();
     }
