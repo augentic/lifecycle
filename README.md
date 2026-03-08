@@ -48,7 +48,7 @@ flowchart LR
     end
 
     subgraph Finalising
-        Merge[Merge PR] -->|/opsx:archive| Archived([Archived])
+        Merge[Merge PRs] -->|/opsx:archive| Archived([Archived])
     end
 
     New([New]) -->|alc propose| Planning
@@ -56,9 +56,13 @@ flowchart LR
     Executing -->|alc archive| Finalising
 ```
 
-## Commands
+### Planning
 
-### `alc propose <change> --description <text> [--dry-run]`
+Generate planning artefacts for a new change. This phase is centralised and determines which repos will be impacted by the change.
+
+```bash
+alc propose <change> --description <text> [--dry-run]
+```
 
 Generate planning artefacts for a new cross-repo change. The agent reads `registry.toml` and current specs from target repos, then produces:
 
@@ -70,9 +74,15 @@ Generate planning artefacts for a new cross-repo change. The agent reads `regist
 
 All artefacts are written to `openspec/changes/<change>/`.
 
-### `alc apply <change> [--target <id>] [--dry-run] [--continue-on-failure]`
+### Executing
 
-Distribute specs and invoke the AI agent in each target repo to implement the change. Targets are processed in dependency order (topological sort). Use `--target` to apply a single target.
+On `execution of the `alc apply` command, the engine will generate OPSX specifications for each target repo and distribute them to the target repos.
+
+The OPSX specs are distributed to the target repos and the AI agent is invoked in each target repo to implement the change. Targets are processed in dependency order (topological sort). Use `--target` to apply a single target.
+
+```bash
+alc apply <change> [--target <id>] [--dry-run] [--continue-on-failure]
+```
 
 For each repo group in `pipeline.toml`:
 
@@ -85,13 +95,23 @@ For each repo group in `pipeline.toml`:
 
 Targets already at `distributed` skip straight to agent invocation. Targets at `implemented` or later are skipped entirely. Use `--continue-on-failure` to keep processing independent groups when one fails.
 
-### `alc status <change>`
+#### Status updates
 
 Print the pipeline status table showing each target's current state and PR URL.
 
-States: `pending` → `distributed` → `applying` → `implemented` → `reviewing` → `merged`. A target can also be `failed`.
+```bash
+alc status <change>
+```
 
-### `alc archive <change> [--mark-ready]`
+States are: `pending` → `distributed` → `applying` → `implemented` → `reviewing` → `merged`. A target can also be `failed`.
+
+### Finalising
+
+When all repos have had their PRs merged (`merged` state), the change is automatically archived to `openspec/changes/archive/YYYY-MM-DD-<change>/`.
+
+```bash
+alc archive <change> [--mark-ready]
+```
 
 Synchronize PR state from GitHub into `status.toml`. Fetches each target's PR via the GitHub API. Transitions:
 
@@ -101,7 +121,7 @@ Synchronize PR state from GitHub into `status.toml`. Fetches each target's PR vi
 
 With `--mark-ready`, draft PRs for `implemented` targets are promoted to ready for review via the GitHub GraphQL API.
 
-When all targets reach `merged`, the change is automatically archived to `openspec/changes/archive/YYYY-MM-DD-<change>/`.
+## Auxillary Commands
 
 ### `alc init`
 
