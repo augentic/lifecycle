@@ -5,7 +5,17 @@ Admin CLI for Augentic's spec-driven development workflow. Manages OpenSpec sche
 ## Installation
 
 ```bash
-cargo install --path .
+# from this repo
+cargo install --path . --root ~/.local
+
+# from GitHub
+cargo install --git https://github.com/augentic/specify --root ~/.local
+```
+
+Confirm the installation:
+
+```bash
+specify --version
 ```
 
 ## Prerequisites
