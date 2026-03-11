@@ -1,8 +1,6 @@
-//! `specify init` -- install `OpenSpec` and initialise it in the current project.
+//! `specify init` -- initialise `OpenSpec` in the current project.
 
-use std::process::Command;
-
-use anyhow::{Context, Result, bail};
+use anyhow::{Result, bail};
 use console::style;
 use dialoguer::{Input, Select};
 
@@ -12,18 +10,14 @@ use crate::core::registry;
 
 /// Run the init command.
 ///
-/// Ensures the `openspec` CLI is installed (via Homebrew), delegates base
-/// project scaffolding to `openspec init`, then layers on specify-specific
-/// schema and configuration.
+/// Resolves the chosen schema, copies it into the project's `openspec/schemas/`
+/// directory, and writes `openspec/config.yaml` with the schema and context.
 ///
 /// # Errors
 ///
-/// Returns an error if Homebrew is unavailable, openspec installation fails,
-/// `openspec init` fails, or the specify-specific layering encounters errors.
+/// Returns an error if schema resolution fails or the specify-specific layering
+/// encounters errors.
 pub fn run(schema: Option<String>, context: Option<String>) -> Result<()> {
-    ensure_openspec_installed()?;
-    run_openspec_init()?;
-
     let cwd = std::env::current_dir()?;
     let project = ProjectDir::from_root(&cwd);
 
@@ -42,7 +36,7 @@ pub fn run(schema: Option<String>, context: Option<String>) -> Result<()> {
     config.write(&project.config_file())?;
 
     println!(
-        "\n  {} Specify configuration layered on top of OpenSpec\n",
+        "\n  {} Specify configuration written\n",
         style("✓").green().bold(),
     );
     println!("  Schema:  {schema_name} (v{})", resolved.schema.version);
@@ -54,67 +48,6 @@ pub fn run(schema: Option<String>, context: Option<String>) -> Result<()> {
     println!("    2. Run {} to start a change\n", style("/opsx:propose <description>").yellow());
 
     Ok(())
-}
-
-/// Check whether `openspec` is on PATH; if not, install it via Homebrew.
-fn ensure_openspec_installed() -> Result<()> {
-    if is_openspec_available() {
-        tracing::debug!("openspec already installed");
-        return Ok(());
-    }
-
-    println!(
-        "\n  {} openspec CLI not found -- installing via Homebrew...\n",
-        style("→").cyan().bold(),
-    );
-
-    if !is_brew_available() {
-        bail!(
-            "Homebrew is required to install openspec but `brew` was not found.\n  \
-             Install Homebrew from https://brew.sh then re-run `specify init`."
-        );
-    }
-
-    let status = Command::new("brew")
-        .args(["install", "openspec"])
-        .status()
-        .context("failed to run `brew install openspec`")?;
-
-    if !status.success() {
-        bail!("`brew install openspec` failed (exit code: {status})");
-    }
-
-    if !is_openspec_available() {
-        bail!(
-            "openspec was installed but is not available on PATH; check your shell configuration"
-        );
-    }
-
-    Ok(())
-}
-
-/// Run `openspec init --tools cursor --force` in the current directory.
-fn run_openspec_init() -> Result<()> {
-    println!("\n  {} Running openspec init...\n", style("→").cyan().bold(),);
-
-    let status = Command::new("openspec")
-        .args(["init", "--tools", "cursor", "--force"])
-        .status()
-        .context("failed to run `openspec init`")?;
-
-    if !status.success() {
-        bail!("`openspec init --tools cursor --force` failed (exit code: {status})");
-    }
-
-    Ok(())
-}
-
-fn is_openspec_available() -> bool {
-    Command::new("openspec").arg("--version").output().is_ok_and(|o| o.status.success())
-}
-
-fn is_brew_available() -> bool {
-    Command::new("brew").arg("--version").output().is_ok_and(|o| o.status.success())
 }
 
 /// Prompt for or validate the schema name.

@@ -8,14 +8,10 @@ Admin CLI for Augentic's spec-driven development workflow. Manages OpenSpec sche
 cargo install --path .
 ```
 
-## Prerequisites
-
-- [Homebrew](https://brew.sh) -- `specify init` installs the `openspec` CLI via `brew install openspec` if it is not already on PATH.
-
 ## Quick Start
 
 ```bash
-# Initialise OpenSpec in your project (installs openspec CLI if needed)
+# Initialise OpenSpec in your project
 specify init
 ```
 
@@ -23,7 +19,7 @@ specify init
 
 ### `specify init`
 
-Install the `openspec` CLI (via Homebrew) if needed, run `openspec init --tools cursor --force` to scaffold the project, then layer on specify-specific schema and configuration.
+Resolve the chosen schema, copy it into `openspec/schemas/`, and write `openspec/config.yaml` with the schema and project context.
 
 ```bash
 specify init                                      # interactive
@@ -92,7 +88,7 @@ openspec/
       templates/
 
 .cursor/
-  skills/                    # Cursor skills (created by openspec init)
+  skills/                    # Cursor skills
   commands/                  # Cursor OPSX commands
 ```
 
