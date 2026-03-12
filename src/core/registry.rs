@@ -27,7 +27,7 @@ pub enum SchemaSource {
     Embedded,
     /// Found in `~/.local/share/specify/schemas/`.
     LocalStore,
-    /// Found in the current project's `specify/schemas/`.
+    /// Found in the current project's `.specify/schemas/`.
     Project,
 }
 
@@ -136,7 +136,7 @@ pub enum SchemaLocation {
 impl ResolvedSchema {
     /// Copy the schema's directory tree into `dest`.
     ///
-    /// `dest` should be the target schema directory (e.g. `specify/schemas/omnia/`).
+    /// `dest` should be the target schema directory (e.g. `.specify/schemas/omnia/`).
     ///
     /// # Errors
     ///

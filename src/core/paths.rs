@@ -5,7 +5,8 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result, bail};
 
 const DATA_SUBDIR: &str = "specify";
-const PROJECT_DIR: &str = "specify";
+const PROJECT_DIR: &str = ".specify";
+const LEGACY_PROJECT_DIR: &str = "specify";
 
 /// Resolved paths for the Specify data directory.
 #[derive(Debug, Clone)]
@@ -55,14 +56,14 @@ impl DataDir {
     }
 }
 
-/// Resolved paths for a project's `specify/` directory.
+/// Resolved paths for a project's `.specify/` directory.
 #[derive(Debug, Clone)]
 pub struct ProjectDir {
     root: PathBuf,
 }
 
 impl ProjectDir {
-    /// Construct from an explicit project root (the parent of `specify/`).
+    /// Construct from an explicit project root (the parent of `.specify/`).
     #[must_use]
     pub fn from_root(project_root: &Path) -> Self {
         Self {
@@ -70,31 +71,41 @@ impl ProjectDir {
         }
     }
 
-    /// Locate the project's `specify/` directory by searching upward from `start`.
+    /// Locate the project's `.specify/` directory by searching upward from `start`.
+    ///
+    /// Checks for `.specify/` first, then falls back to the legacy `specify/`
+    /// directory for backward compatibility.
     ///
     /// # Errors
     ///
-    /// Returns an error if no `specify/` directory is found in the path hierarchy.
+    /// Returns an error if no `.specify/` or `specify/` directory is found.
     pub fn discover(start: &Path) -> Result<Self> {
         let mut current = start.to_path_buf();
         loop {
-            let candidate = current.join(PROJECT_DIR);
-            if candidate.is_dir() {
-                return Ok(Self { root: candidate });
+            let preferred = current.join(PROJECT_DIR);
+            if preferred.is_dir() {
+                return Ok(Self { root: preferred });
+            }
+            let legacy = current.join(LEGACY_PROJECT_DIR);
+            if legacy.is_dir() {
+                return Ok(Self { root: legacy });
             }
             if !current.pop() {
-                bail!("no specify/ directory found (searched upward from {})", start.display());
+                bail!(
+                    "no .specify/ directory found (searched upward from {})",
+                    start.display()
+                );
             }
         }
     }
 
-    /// Root of the specify directory (`<project>/specify/`).
+    /// Root of the specify directory (`<project>/.specify/`).
     #[must_use]
     pub fn root(&self) -> &Path {
         &self.root
     }
 
-    /// Path to `specify/config.yaml`.
+    /// Path to `.specify/config.yaml`.
     #[must_use]
     pub fn config_file(&self) -> PathBuf {
         self.root.join("config.yaml")
@@ -124,25 +135,25 @@ impl ProjectDir {
         self.changes_dir().join(name)
     }
 
-    /// Path to the baseline specs directory (`specify/specs/`).
+    /// Path to the baseline specs directory (`.specify/specs/`).
     #[must_use]
     pub fn specs_dir(&self) -> PathBuf {
         self.root.join("specs")
     }
 
-    /// Path to a specific capability's spec directory (`specify/specs/<capability>/`).
+    /// Path to a specific capability's spec directory (`.specify/specs/<capability>/`).
     #[must_use]
     pub fn spec_dir(&self, capability: &str) -> PathBuf {
         self.specs_dir().join(capability)
     }
 
-    /// Path to the change archive directory (`specify/changes/archive/`).
+    /// Path to the change archive directory (`.specify/changes/archive/`).
     #[must_use]
     pub fn archive_dir(&self) -> PathBuf {
         self.changes_dir().join("archive")
     }
 
-    /// Whether the specify directory already exists.
+    /// Whether the `.specify` directory already exists.
     #[must_use]
     pub fn exists(&self) -> bool {
         self.root.is_dir()
