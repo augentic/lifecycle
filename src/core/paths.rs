@@ -91,10 +91,7 @@ impl ProjectDir {
                 return Ok(Self { root: legacy });
             }
             if !current.pop() {
-                bail!(
-                    "no .specify/ directory found (searched upward from {})",
-                    start.display()
-                );
+                bail!("no .specify/ directory found (searched upward from {})", start.display());
             }
         }
     }
