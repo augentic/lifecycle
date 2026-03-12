@@ -118,7 +118,7 @@ artifacts:
           - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
           - **CRITICAL**: In delta specs (this template), scenarios MUST use
             exactly 4 hashtags (`####`). In full baseline specs organized
-            under `## Handler:` sections (see references/openspec.md),
+            under `## Handler:` sections (see references/specify.md),
             scenarios are one level deeper at `#####`. Using fewer hashtags
             or bullets will fail silently.
           - Every requirement MUST have at least one scenario.
