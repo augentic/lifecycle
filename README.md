@@ -45,7 +45,7 @@ specify archive add-dark-mode
 
 ### `specify init`
 
-Resolve the schema and write project configuration. Creates `specify/config.yaml`, `specify/schemas/`, `specify/changes/`, and `specify/specs/`.
+Resolve the schema and write project configuration. Creates `.specify/config.yaml`, `.specify/schemas/`, `.specify/changes/`, and `.specify/specs/`.
 
 ```bash
 specify init                  # interactive
@@ -102,8 +102,8 @@ specify archive add-dark-mode --json
 The archive process:
 
 1. Validates all artifacts are complete
-2. Merges each `specs/<capability>/spec.md` into `specify/specs/<capability>/spec.md`
-3. Moves the change to `specify/changes/archive/<date>-<name>/`
+2. Merges each `specs/<capability>/spec.md` into `.specify/specs/<capability>/spec.md`
+3. Moves the change to `.specify/changes/archive/<date>-<name>/`
 
 ### `specify update`
 
@@ -111,7 +111,7 @@ Fetch the latest schemas from GitHub and write them to the local store (`~/.loca
 
 ```bash
 specify update                        # fetch from augentic/lifecycle main branch
-specify update --project              # also update this project's specify/schemas/
+specify update --project              # also update this project's .specify/schemas/
 specify update --repo org/repo        # fetch from a different repository
 specify update --git-ref v2.0         # fetch from a specific tag or branch
 ```
@@ -150,7 +150,7 @@ Changes use delta operations to evolve baseline specs without replacing them who
 - **REMOVED Requirements** -- existing requirements deleted by name match
 - **RENAMED Requirements** -- requirement header renamed (FROM:/TO: format)
 
-Delta merging is structural (header-based section splitting) and does not interpret markdown content. At archive time, deltas are applied to `specify/specs/` and the change is moved to the archive.
+Delta merging is structural (header-based section splitting) and does not interpret markdown content. At archive time, deltas are applied to `.specify/specs/` and the change is moved to the archive.
 
 ## Skill Integration
 
@@ -169,7 +169,7 @@ Typical skill workflow:
 ## OpenSpec Artifacts
 
 ```text
-specify/
+.specify/
   config.yaml                # Project configuration (schema, context, rules)
   specs/                     # Baseline specs (source of truth)
   changes/                   # Active changes (one folder per change)
@@ -190,7 +190,7 @@ specify/
 
 ## Configuration
 
-`specify/config.yaml` controls which schema is active and provides project-specific context and rules for artifact generation.
+`.specify/config.yaml` controls which schema is active and provides project-specific context and rules for artifact generation.
 
 ```yaml
 schema: omnia
