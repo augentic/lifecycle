@@ -124,19 +124,39 @@ impl ProjectDir {
         self.changes_dir().join(name)
     }
 
+    /// Path to the baseline specs directory (`openspec/specs/`).
+    #[must_use]
+    pub fn specs_dir(&self) -> PathBuf {
+        self.root.join("specs")
+    }
+
+    /// Path to a specific capability's spec directory (`openspec/specs/<capability>/`).
+    #[must_use]
+    pub fn spec_dir(&self, capability: &str) -> PathBuf {
+        self.specs_dir().join(capability)
+    }
+
+    /// Path to the change archive directory (`openspec/changes/archive/`).
+    #[must_use]
+    pub fn archive_dir(&self) -> PathBuf {
+        self.changes_dir().join("archive")
+    }
+
     /// Whether the openspec directory already exists.
     #[must_use]
     pub fn exists(&self) -> bool {
         self.root.is_dir()
     }
 
-    /// Ensure the full directory skeleton exists.
+    /// Ensure the full directory skeleton exists (changes/ and specs/).
     ///
     /// # Errors
     ///
     /// Returns an error if the directories cannot be created.
     pub fn ensure(&self) -> Result<()> {
         std::fs::create_dir_all(self.changes_dir())
-            .with_context(|| format!("creating project directory at {}", self.root.display()))
+            .with_context(|| format!("creating {}", self.changes_dir().display()))?;
+        std::fs::create_dir_all(self.specs_dir())
+            .with_context(|| format!("creating {}", self.specs_dir().display()))
     }
 }

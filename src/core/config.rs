@@ -13,7 +13,7 @@ pub struct ProjectConfig {
     pub schema: String,
 
     /// Free-form project context injected into artifact generation.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub context: String,
 
     /// Per-artifact rule overrides keyed by artifact ID.
