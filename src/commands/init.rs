@@ -1,6 +1,6 @@
 //! `specify init` -- initialise `OpenSpec` in the current project.
 
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use console::style;
 use dialoguer::Select;
 
@@ -31,8 +31,14 @@ pub fn run(schema: Option<String>) -> Result<()> {
     let dest = project.schema_dir(&schema_name);
     resolved.copy_to(&dest)?;
 
-    let config = ProjectConfig::new(&schema_name, "");
-    config.write(&project.config_file())?;
+    let template_path = dest.join("config.yaml");
+    if template_path.is_file() {
+        std::fs::copy(&template_path, project.config_file())
+            .with_context(|| format!("copying config template from {}", template_path.display()))?;
+    } else {
+        let config = ProjectConfig::new(&schema_name, "");
+        config.write(&project.config_file())?;
+    }
 
     println!("\n  {} Specify configuration written\n", style("✓").green().bold());
     println!("  Schema:  {schema_name} (v{})", resolved.schema.version);
