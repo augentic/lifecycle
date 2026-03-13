@@ -1,0 +1,4 @@
+# Override GitHub Linguist language detection
+# Primary language: Markdown
+* linguist-documentation=false
+*.md linguist-detectable=true

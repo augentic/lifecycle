@@ -1,0 +1,81 @@
+---
+description: Specify plugin context -- Specify workflow orchestration for proposing, applying, archiving, and exploring changes
+alwaysApply: true
+---
+
+# Specify Plugin - Specify Workflow
+
+## Overview
+
+This plugin provides the core Specify workflow skills: propose a change, apply (implement) a change, archive a completed change, explore ideas or problems interactively, check status, and initialize new projects. These skills orchestrate the human-driven Specify lifecycle that the specialist plugins (Omnia, RT, Plan) build on.
+
+**Purpose**: Drive the propose -> apply -> archive workflow with optional explore for thinking and investigation.
+
+## Plugin Architecture
+
+```text
+/plugins/spec/
+├── .cursor-plugin/
+│   └── plugin.json      # Plugin manifest
+├── mcp.json              # MCP config (none required)
+├── rules/
+│   └── spec.mdc          # This file
+├── references/
+│   └── specify.md        # Artifact format reference
+└── skills/
+    ├── init/              # Initialize Specify in a project
+    ├── propose/           # Create a change with all artifacts
+    ├── apply/             # Implement tasks from a change
+    ├── archive/           # Archive a completed change
+    ├── explore/           # Thinking partner for ideas and investigation
+    └── status/            # Check change status and progress
+```
+
+Each skill has its own SKILL.md with full details. The Specify artifact format is described in [specify.md](../references/specify.md).
+
+## Workflow
+
+```text
+/spec:init (once per project)
+
+/spec:propose  ->  /spec:apply  ->  /spec:archive
+                        ^
+                        |
+                   /spec:explore (anytime)
+                   /spec:status  (anytime)
+```
+
+- **init**: One-time project setup -- creates `.specify/` directory structure and `config.yaml`
+- **propose**: Create a change directory and generate proposal, specs, design, and task artifacts
+- **apply**: Implement tasks from an existing change, marking them complete as you go
+- **archive**: Finalize a completed change, merging delta specs into baseline
+- **explore**: Read-only thinking mode for investigating problems and clarifying requirements
+- **status**: Check artifact completion, task progress, and active/archived changes
+
+## Troubleshooting
+
+### Project Not Initialized
+
+- Run `/spec:init` in the project root to create the `.specify/` directory structure
+- Verify with `/spec:status`
+
+### Change Not Found
+
+- Run `/spec:status` to see active changes
+- Check the change name matches (kebab-case)
+
+### Artifacts Incomplete
+
+- Run `/spec:status <name>` to check artifact status
+- Use `/spec:propose` to regenerate missing artifacts
+
+## Related Documentation
+
+- See project rule (`.cursor/rules/project.mdc`) for overall project context
+- [Init SKILL.md](skills/init/SKILL.md) - Initialize Specify
+- [Propose SKILL.md](skills/propose/SKILL.md) - Create changes with artifacts
+- [Apply SKILL.md](skills/apply/SKILL.md) - Implement change tasks
+- [Archive SKILL.md](skills/archive/SKILL.md) - Finalize completed changes
+- [Explore SKILL.md](skills/explore/SKILL.md) - Thinking and investigation mode
+- [Status SKILL.md](skills/status/SKILL.md) - Check status and progress
+- [Specify Artifact Specification](../references/specify.md) - Artifact format details

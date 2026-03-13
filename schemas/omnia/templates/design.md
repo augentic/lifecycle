@@ -1,3 +1,14 @@
+<!--
+For multi-crate changes, structure the document with crate-specific sections:
+
+## Crate: <crate-name>
+
+### Domain Model
+...
+### Business Logic
+...
+-->
+
 ## Context
 
 <!-- Source, purpose, and background for this change -->
