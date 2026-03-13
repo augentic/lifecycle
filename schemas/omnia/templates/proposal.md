@@ -18,19 +18,19 @@ Identify where the requirements come from. Pick ONE:
 Describe what will change. Be specific about new capabilities or modifications. 
 -->
 
-## Capabilities
+## Crates
 
-### New Capabilities
+### New Crates
 
 <!-- 
-List capabilities being introduced. Each becomes a new specs/<name>/spec.md.
+List crates being introduced. Each becomes a new specs/<name>/spec.md.
 Use kebab-case names (e.g., user-auth, data-export).
 -->
 
-### Modified Capabilities
+### Modified Crates
 
 <!-- 
-List existing capabilities whose REQUIREMENTS are changing.
+List existing crates whose REQUIREMENTS are changing.
 Use existing spec folder names from .specify/specs/.
 Leave empty if no requirement changes.
 -->
