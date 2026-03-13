@@ -7,15 +7,19 @@ metadata:
   version: "3.0"
 ---
 
+# Propose Skill
+
 Propose a new change - create the change and generate all artifacts in one step.
 
 When ready to implement, run /spec:apply
 
 ---
 
-**Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build. Optionally, an artifact ID to regenerate a single artifact for an existing change (e.g., `/spec:propose my-change design`).
+## Input
 
-**Steps**
+The user's request should include a change name (kebab-case) OR a description of what they want to build. Optionally, an artifact ID to regenerate a single artifact for an existing change (e.g., `/spec:propose my-change design`).
+
+## Steps
 
 1. **If no clear input provided, ask what they want to build**
 
@@ -59,7 +63,8 @@ When ready to implement, run /spec:apply
    j. Run validators if `validate` rules are defined for this artifact (see step 6)
    k. Do NOT change the `status` field
    l. Show output:
-      ```
+
+      ```markdown
       ## Artifact Regenerated
 
       **Change:** <name>
@@ -67,7 +72,9 @@ When ready to implement, run /spec:apply
       **Dependencies read:** <list of requires artifacts>
 
       The artifact has been updated. Other artifacts are unchanged.
+
       ```
+
    m. Stop — do not proceed to full propose flow
 
 5. **Create the change directory**
@@ -81,6 +88,7 @@ When ready to implement, run /spec:apply
    ```
 
    Write `.specify/changes/<name>/.metadata.yaml`:
+
    ```yaml
    schema: <schema_from_config>
    status: proposing
@@ -131,7 +139,8 @@ When ready to implement, run /spec:apply
    - What's ready: "All artifacts created! Ready for implementation."
    - Prompt: "Run `/spec:apply` or ask me to implement to start working on the tasks."
 
-**Guardrails**
+## Guardrails
+
 - Create ALL artifacts defined in `schema.yaml` before declaring the change ready
 - Always read dependency artifacts (from `requires`) before creating a new one
 - If context is critically unclear, ask the user -- but prefer making reasonable decisions to keep momentum

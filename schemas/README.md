@@ -71,7 +71,7 @@ name or a URL.
 
 Schema URLs support an optional `@ref` suffix to pin a specific git ref:
 
-```
+```text
 https://github.com/{owner}/{repo}/schemas/{name}
 https://github.com/{owner}/{repo}/schemas/{name}@{ref}
 ```
@@ -87,9 +87,11 @@ schema: https://github.com/augentic/specify/schemas/omnia@abc123   # pinned to c
 ### Resolution Order
 
 **Name resolution** (e.g., `schema: omnia`):
+
 - Look for `schemas/<name>/` in the plugin directory.
 
 **URL resolution** (e.g., `schema: https://github.com/augentic/specify/schemas/omnia@v1`):
+
 1. Split on `@` to extract the schema name (last path segment) and ref
    (default `main`).
 2. Check if `schemas/<name>/` exists locally in the plugin directory.

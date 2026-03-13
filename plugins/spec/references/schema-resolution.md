@@ -12,7 +12,7 @@ Skills resolve the `schema` field from `.specify/config.yaml` (or `.metadata.yam
 Schema URLs support an optional `@ref` suffix to pin a specific git ref
 (branch, tag, or commit):
 
-```
+```text
 https://github.com/{owner}/{repo}/schemas/{name}
 https://github.com/{owner}/{repo}/schemas/{name}@{ref}
 ```
@@ -62,7 +62,8 @@ When no `@ref` is present, `main` is used as the default ref.
 4. **Remote resolution** (URL, no local match, no valid cache)
 
    Construct raw content URLs using `$REF`:
-   ```
+
+   ```text
    https://raw.githubusercontent.com/<owner>/<repo>/$REF/<path>/<file>
    ```
 
@@ -74,7 +75,7 @@ When no `@ref` is present, `main` is used as the default ref.
    **Populate the cache**: write fetched files to `.specify/.cache/`
    mirroring the schema directory structure:
 
-   ```
+   ```text
    .specify/.cache/
    ├── .cache-meta.yaml
    ├── schema.yaml

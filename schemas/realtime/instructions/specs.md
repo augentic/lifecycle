@@ -1,3 +1,5 @@
+# Realtime Specs Instructions
+
 Create specification files that define WHAT the system should do.
 
 First, read the proposal's **Source** section to determine the workflow:
@@ -8,11 +10,11 @@ First, read the proposal's **Source** section to determine the workflow:
 
   1. Clone the source repository. Invoke `/rt:git-cloner` with
      arguments:
-       <repo-url> legacy/ true
+       `<repo-url> legacy/ true`
      This clones the repo into `legacy/<repo-name>` as a detached tree.
   2. Generate specs and design. Invoke `/rt:code-analyzer` with
      arguments:
-       legacy/<repo-name> <change-dir>
+       `legacy/<repo-name> <change-dir>`
      code-analyzer produces both `specs/` and `design.md` in a single
      pass.
   3. Review the generated specs for completeness and adjust if needed.
@@ -28,7 +30,7 @@ First, read the proposal's **Source** section to determine the workflow:
 
   **New Capabilities**: use the **New Capability** template from the
   resolved schema's `templates/spec-new.md`. Use the exact kebab-case
-  name from the proposal (specs/<capability>/spec.md).
+  name from the proposal (`specs/<capability>/spec.md`).
 
   New capability guidelines:
 
@@ -47,8 +49,8 @@ First, read the proposal's **Source** section to determine the workflow:
 
   **Modified Capabilities**: use the **Modified Capability** template
   from the resolved schema's `templates/spec-delta.md`. Use the existing
-  spec folder name from .specify/specs/<capability>/ when creating
-  the delta spec at specs/<capability>/spec.md.
+  spec folder name from `.specify/specs/<capability>/` when creating
+  the delta spec at `specs/<capability>/spec.md`.
 
   Delta operations use the headings defined in `schema.yaml`'s
   `spec_format.delta_operations`:
@@ -67,7 +69,7 @@ First, read the proposal's **Source** section to determine the workflow:
 
   MODIFIED requirements workflow:
     1. Locate the existing requirement in
-      .specify/specs/<capability>/spec.md
+      `.specify/specs/<capability>/spec.md`
     2. Copy the ENTIRE requirement block (from `### Requirement:`
       through all scenarios).
     3. Paste under the MODIFIED heading and edit to reflect new
