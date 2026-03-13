@@ -111,6 +111,7 @@ make checks
 - [Project Rule](.cursor/rules/project.mdc)
 - [Contribution Guide](CONTRIBUTING.md)
 - [Cursor Skills Documentation](https://docs.cursor.com/skills)
+- [Cursor Plugin Marketplace](https://cursor.com/docs/reference/plugins)
 
 ## License
 
