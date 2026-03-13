@@ -90,7 +90,7 @@ augentic-plugins/
 │   ├── spec/                     # Specify workflow plugin
 │   ├── plan/                     # Plan requirements analysis plugin
 │   └── rt/                       # RT migration plugin
-├── references/                   # Shared Omnia and workflow references
+│   ├── references/               # Shared Omnia and workflow references
 ├── schemas/                      # Schema definitions (reference documentation)
 └── scripts/                      # Documentation and consistency checks
 ```
@@ -105,7 +105,7 @@ make checks
 
 ## Documentation
 
-- [Specify Artifact Guidance](references/specify.md)
+- [Specify Artifact Guidance](plugins/references/specify.md)
 - [Project Rule](.cursor/rules/project.mdc)
 - [Contribution Guide](CONTRIBUTING.md)
 - [Cursor Skills Documentation](https://docs.cursor.com/skills)

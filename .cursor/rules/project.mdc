@@ -31,7 +31,7 @@ When conflicts arise, follow this strict precedence order:
 
 1. **SKILL.md** - generation rules and hard constraints
 2. **Specify artifacts** - `proposal.md`, `spec.md`, `design.md`, `tasks.md`
-3. **references/** - authoritative patterns and examples
+3. **plugins/references/** - authoritative patterns and examples
 4. **Source** - reference for ambiguity only
 5. **LLM inference** - only after explicit evidence; prefer `[unknown]`
 
@@ -88,7 +88,7 @@ Behavioral specs should remain platform-neutral. Omnia trait selection, guest wi
   ├── spec/         # Specify workflow plugin (init, propose, apply, archive, explore, status)
   ├── plan/         # Plan requirements analysis plugin
   └── rt/           # RT migration plugin
-/references/        # Shared Omnia and workflow references
+  ├── references/   # Shared Omnia and workflow references
 /schemas/           # Schema definitions (reference documentation)
 /scripts/           # Documentation and consistency checks
 ```
@@ -120,7 +120,7 @@ cargo clippy -- -D warnings
 
 ### WASM And Omnia SDK Constraints
 
-See [guardrails.md](references/omnia/guardrails.md) for forbidden crates and APIs, provider trait rules, validation placement, and runtime constraints.
+See [guardrails.md](plugins/references/omnia/guardrails.md) for forbidden crates and APIs, provider trait rules, validation placement, and runtime constraints.
 
 ## File Locations
 
@@ -140,7 +140,7 @@ In this repository:
 
 - Mark uncertain behavior with `[unknown]`
 - Keep specs behavioral and technical detail in `design.md`
-- Review `references/specify.md` when artifact responsibilities feel blurred
+- Review `plugins/references/specify.md` when artifact responsibilities feel blurred
 
 ### Generation Issues
 
@@ -156,7 +156,7 @@ In this repository:
 
 ## Getting Help
 
-- Review `references/specify.md`
+- Review `plugins/references/specify.md`
 - Review the relevant `SKILL.md`
-- Review `references/omnia/`
+- Review `plugins/references/omnia/`
 - Open an issue for bugs or enhancement requests

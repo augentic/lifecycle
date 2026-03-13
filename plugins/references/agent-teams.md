@@ -176,7 +176,7 @@ The lead approves plans that satisfy all of:
 1. **Root cause**: Addresses the underlying cause, not just the symptom
 2. **Minimal scope**: Changes the fewest files and lines necessary
 3. **Low regression risk**: Antagonist assessment shows low chance of breaking other tests
-4. **Pattern compliance**: Fix follows established patterns in [repair-patterns.md](../skills/crate-writer/references/repair-patterns.md)
+4. **Pattern compliance**: Fix follows established patterns in [repair-patterns.md](../omnia/skills/crate-writer/references/repair-patterns.md)
 5. **No test modification** (unless artifacts are demonstrably wrong): Fixes the implementation, not the tests
 
 ### Cross-Iteration Memory

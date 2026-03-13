@@ -1,1 +1,0 @@
-/Users/andrewweston/rust/github.com/augentic/specify/target/wasm32-wasip2/debug/libhello_world.rlib: /Users/andrewweston/rust/github.com/augentic/specify/crates/hello-world/src/handler.rs /Users/andrewweston/rust/github.com/augentic/specify/crates/hello-world/src/lib.rs /Users/andrewweston/rust/github.com/augentic/specify/crates/hello-world/src/types.rs

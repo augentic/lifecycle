@@ -26,4 +26,4 @@ All validation is run from the repository root:
 
 - In a fresh clone, run `/spec:init` before using other `/spec:*` commands. The workflow skills expect the `.specify/` project structure to exist.
 - `checks.sh` enforces documentation consistency; if you remove or rename workflow terms, update the checks in the same change.
-- Some skills use symlinks to share reference documents from `references/`. If a symlink target is removed, the skill's documentation may reference content that no longer resolves.
+- Some skills use symlinks to share reference documents from `plugins/references/`. If a symlink target is removed, the skill's documentation may reference content that no longer resolves.
