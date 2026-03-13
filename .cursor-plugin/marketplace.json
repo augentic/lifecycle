@@ -1,11 +1,11 @@
 {
   "name": "Augentic",
   "owner": {
-    "name": "Augentic",
+    "name": "augentic",
     "email": "info@augentic.io"
   },
   "metadata": {
-    "description": "AI-driven code generation plugins for Augentic.",
+    "description": "Spec-driven code generation plugins for Augentic.",
     "version": "0.13.0",
     "pluginRoot": "plugins"
   },
