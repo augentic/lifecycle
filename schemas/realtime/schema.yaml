@@ -3,10 +3,8 @@ version: 1
 description: Realtime workflow
 
 spec_format:
-  section_heading: "## Handler:"
   requirement_heading: "### Requirement:"
-  scenario_heading_baseline: "##### Scenario:"
-  scenario_heading_delta: "#### Scenario:"
+  scenario_heading: "#### Scenario:"
   delta_operations:
     added: "## ADDED Requirements"
     modified: "## MODIFIED Requirements"
@@ -38,7 +36,7 @@ artifacts:
     validate:
       - Every requirement has at least one scenario
       - Uses SHALL/MUST language for normative requirements (not should/may)
-      - No empty Handler sections
+      - Requirements use the flat baseline format with top-level requirement headings
       - Every scenario uses WHEN/THEN format
 
   - id: design

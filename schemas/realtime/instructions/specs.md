@@ -32,18 +32,16 @@ First, read the proposal's **Source** section to determine the workflow:
 
   New capability guidelines:
 
-  Structure the spec using the section heading defined in
-  `schema.yaml`'s `spec_format.section_heading` (e.g., `## Handler:`).
-  Each section contains:
-    - `### Purpose` — what the handler does
-    - `### Requirements` — behavioral requirements, each as
-      `#### Requirement: <name>` with `##### Scenario:` entries
-    - `### Error Conditions` — error types and triggers
-    - `### Metrics` — (optional) metric names and types
+  Structure the spec as a flat baseline document:
+    - `## Purpose` — what the capability does overall
+    - `### Requirement: <name>` — one block per behavioral requirement
+    - `#### Scenario: <name>` — one or more scenarios under each requirement
+    - `## Error Conditions` — optional shared error types and triggers
+    - `## Metrics` — optional metric names and types
 
   Format requirements:
     - Use SHALL/MUST for normative requirements (avoid should/may)
-    - Each scenario: `##### Scenario: <name>` with WHEN/THEN format
+    - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
     - Every requirement MUST have at least one scenario
     - Specs should be testable — each scenario is a potential test case
 
@@ -65,9 +63,6 @@ First, read the proposal's **Source** section to determine the workflow:
     - Each requirement: `### Requirement: <name>` followed by description
     - Use SHALL/MUST for normative requirements (avoid should/may)
     - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
-    - **CRITICAL**: In delta specs, scenarios MUST use exactly 4 hashtags
-      (`####`). In full baseline specs organized under section headings,
-      scenarios are one level deeper at `#####`.
     - Every requirement MUST have at least one scenario.
 
   MODIFIED requirements workflow:

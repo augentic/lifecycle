@@ -1,3 +1,5 @@
+# Omnia Specs Instructions
+
 Create specification files that define WHAT the system should do.
 
 First, read the proposal's **Source** section to determine the workflow:
@@ -8,11 +10,11 @@ First, read the proposal's **Source** section to determine the workflow:
 
   1. Clone the source repository. Invoke `/rt:git-cloner` with
      arguments:
-       <repo-url> legacy/ true
+       `<repo-url> legacy/ true`
      This clones the repo into `legacy/<repo-name>` as a detached tree.
   2. Generate specs and design. Invoke `/rt:code-analyzer` with
      arguments:
-       legacy/<repo-name> <change-dir>
+       `legacy/<repo-name> <change-dir>`
      code-analyzer produces both `specs/` and `design.md` in a single
      pass.
   3. Review the generated specs for completeness and adjust if needed.
@@ -27,7 +29,7 @@ First, read the proposal's **Source** section to determine the workflow:
 
   1. Generate specs and design. Invoke `/plan:epic-analyzer` with
      arguments:
-       <epic-key> <change-dir>
+       `<epic-key> <change-dir>`
      epic-analyzer produces `proposal.md`, `specs/`, and `design.md`.
   2. Review the generated specs for completeness and adjust if needed.
   3. Proceed to the next artifact. design.md was already produced by
@@ -42,29 +44,27 @@ First, read the proposal's **Source** section to determine the workflow:
 
   **New Crates**: use the **New Crate** template from the resolved
   schema's `templates/spec-new.md`. Use the exact kebab-case name
-  from the proposal (specs/<crate>/spec.md).
+  from the proposal (`specs/<crate>/spec.md`).
 
   New crate guidelines:
 
-  Structure the spec using the section heading defined in
-  `schema.yaml`'s `spec_format.section_heading` (e.g., `## Handler:`).
-  Each section contains:
-    - `### Purpose` — what the handler does
-    - `### Requirements` — behavioral requirements, each as
-      `#### Requirement: <name>` with `##### Scenario:` entries
-    - `### Error Conditions` — error types and triggers
-    - `### Metrics` — (optional) metric names and types
+  Structure the spec as a flat baseline document:
+    - `## Purpose` — what the crate does overall
+    - `### Requirement: <name>` — one block per behavioral requirement
+    - `#### Scenario: <name>` — one or more scenarios under each requirement
+    - `## Error Conditions` — optional shared error types and triggers
+    - `## Metrics` — optional metric names and types
 
   Format requirements:
     - Use SHALL/MUST for normative requirements (avoid should/may)
-    - Each scenario: `##### Scenario: <name>` with WHEN/THEN format
+    - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
     - Every requirement MUST have at least one scenario
     - Specs should be testable — each scenario is a potential test case
 
   **Modified Crates**: use the **Modified Crate** template from the
   resolved schema's `templates/spec-delta.md`. Use the existing spec
-  folder name from .specify/specs/<crate>/ when creating the delta
-  spec at specs/<crate>/spec.md.
+  folder name from `.specify/specs/<crate>/` when creating the delta
+  spec at `specs/<crate>/spec.md`.
 
   Delta operations use the headings defined in `schema.yaml`'s
   `spec_format.delta_operations`:
@@ -79,14 +79,11 @@ First, read the proposal's **Source** section to determine the workflow:
     - Each requirement: `### Requirement: <name>` followed by description
     - Use SHALL/MUST for normative requirements (avoid should/may)
     - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
-    - **CRITICAL**: In delta specs, scenarios MUST use exactly 4 hashtags
-      (`####`). In full baseline specs organized under section headings,
-      scenarios are one level deeper at `#####`.
     - Every requirement MUST have at least one scenario.
 
   MODIFIED requirements workflow:
     1. Locate the existing requirement in
-      .specify/specs/<capability>/spec.md
+      `.specify/specs/<crate>/spec.md`
     2. Copy the ENTIRE requirement block (from `### Requirement:`
       through all scenarios).
     3. Paste under the MODIFIED heading and edit to reflect new

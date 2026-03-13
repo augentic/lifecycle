@@ -64,7 +64,7 @@ When conflicts arise, follow this strict precedence:
 
 ### Step 1: Read Crate and Artifacts
 
-1. Read the spec file from `$SPECS_DIR/$CRATE_NAME/spec.md` (consolidated file with `## Handler:` sections)
+1. Read the spec file from `$SPECS_DIR/$CRATE_NAME/spec.md` (consolidated file with flat `### Requirement:` / `#### Scenario:` blocks)
 2. Read design.md from `$DESIGN_PATH`
 3. Read existing crate code from `$CRATE_PATH/src/` to identify:
    - Handler implementations and their provider trait bounds
@@ -84,9 +84,9 @@ If `$CRATE_PATH/tests/` exists, parse it to understand the current test state:
 
 ### Step 3: Map Spec Scenarios to Tests
 
-For each `## Handler:` section in the spec, and each `#### Scenario:` or `##### Scenario:` within it:
+For the spec file at `$SPECS_DIR/$CRATE_NAME/spec.md`, and for each `### Requirement:` block plus each `#### Scenario:` within it:
 
-1. **One test function per scenario** -- deterministic naming: `test_<handler>_<scenario_snake_case>`
+1. **One test function per scenario** -- deterministic naming: `test_<crate>_<scenario_snake_case>`
 2. **Happy path tests** from success scenarios (WHEN/THEN with expected output)
 3. **Error case tests** from error scenarios (WHEN/THEN with expected error code)
 4. **Validation tests** from requirement constraints (field presence, format, range)
@@ -109,7 +109,7 @@ See [mock-provider.md](references/mock-provider.md) for complete patterns (Stati
 
 ### Step 5: Generate Test Files
 
-For each handler, generate a test file at `tests/<handler_name>.rs`:
+Generate the primary spec-driven test file at `tests/<crate_name>.rs`:
 
 ```rust
 mod provider;
@@ -119,7 +119,7 @@ use omnia_sdk::api::Client;
 use provider::MockProvider;
 
 #[tokio::test]
-async fn test_<handler>_happy_path() {
+async fn test_<crate>_happy_path() {
     let provider = MockProvider::new();
     let client = Client::new("owner").provider(provider.clone());
 
@@ -131,7 +131,7 @@ async fn test_<handler>_happy_path() {
 }
 
 #[tokio::test]
-async fn test_<handler>_<error_scenario>() {
+async fn test_<crate>_<error_scenario>() {
     let provider = MockProvider::new();
     let client = Client::new("owner").provider(provider.clone());
 
@@ -217,7 +217,7 @@ This enables the spec-as-contract model: specs have teeth because tests enforce 
 Before completing, verify ALL items:
 
 - [ ] `tests/provider.rs` with MockProvider implementing all required traits
-- [ ] At least one test per handler (happy path)
+- [ ] At least one happy-path test for the spec file
 - [ ] Error case tests for validation failures documented in specs
 - [ ] Tests use `Client::new("owner").provider(mock)` pattern
 - [ ] Test fixtures in `tests/data/` or inline

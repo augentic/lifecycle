@@ -390,20 +390,20 @@ When the source code uses `@azure/data-tables`, `TableClient`, `listEntities`, `
 
 #### 7c: Write Spec File
 
-Write a single consolidated spec file at `$SPECS_DIR/$CRATE_NAME/spec.md` with a `## Handler: <handler_name>` section for each handler/capability identified in Steps 2-6. Each handler section contains:
+Write a single consolidated spec file at `$SPECS_DIR/$CRATE_NAME/spec.md` using the flat baseline format:
 
-1. **Purpose** — 1-2 sentence description from the function's role
-2. **Requirements** — one requirement per distinct business rule (use `The system SHALL ...` format). Each requirement includes:
+1. `## Purpose` — 1-2 sentence description of what the crate/capability does overall
+2. `### Requirement: <Behavior Name>` — one top-level block per distinct business rule (use `The system SHALL ...` format). Each requirement includes:
    - Source traceability (source function path)
-   - **Scenarios** derived from algorithm steps (happy path), error handling (error paths), and edge cases. Use BDD Given/When/Then format.
-3. **Error Conditions** — error type, description, HTTP status, and conditions that trigger each error
-4. **Metrics** — metric name, type (counter/gauge/histogram), emission point, and labels
+   - `#### Scenario: <name>` entries derived from algorithm steps (happy path), error handling (error paths), and edge cases
+3. `## Error Conditions` — shared error type, description, HTTP status, and trigger conditions when the source exposes them
+4. `## Metrics` — metric name, type (counter/gauge/histogram), emission point, and labels when explicit in the source
 
 See [specify.md](references/specify.md) Spec File Format and Deriving Specs from Source Code for the complete template.
 
 **VERIFY**: After writing, validate against the checklist:
 
-- [ ] One spec file per crate at `$SPECS_DIR/$CRATE_NAME/spec.md` with `## Handler:` sections
+- [ ] One spec file per crate at `$SPECS_DIR/$CRATE_NAME/spec.md` using flat `### Requirement:` blocks
 - [ ] Each spec has Purpose, Requirements with BDD scenarios, and Error Conditions
 - [ ] design.md has all required sections (Context through Notes)
 - [ ] design.md Business Logic has tagged algorithm for every handler
@@ -466,7 +466,7 @@ Additionally, verify these skill-specific items:
 
 **Artifact completeness**:
 
-- [ ] **One spec per crate**: Single consolidated spec file at `$SPECS_DIR/$CRATE_NAME/spec.md` with `## Handler:` sections for each handler/capability
+- [ ] **One spec per crate**: Single consolidated spec file at `$SPECS_DIR/$CRATE_NAME/spec.md` with flat `### Requirement:` blocks for each distinct behavior
 - [ ] **design.md complete**: design.md includes all required sections (Context, Domain Model, Structures, API Contracts, External Services, Constants & Configuration, Business Logic, Publication & Timing, Output Event Structures, Implementation Constraints, Source Capabilities Summary, Dependencies, Notes)
 - [ ] **BDD scenarios**: Each spec has Requirements with Given/When/Then scenarios derived from algorithm steps and error handling
 

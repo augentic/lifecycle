@@ -49,44 +49,37 @@ Specs are behavioral. They should not encode Omnia trait bindings, WASM implemen
 
 ### Spec File Format (Baseline / New Crate)
 
-New crate specs and promoted baselines use the section heading format defined
-in the schema's `spec_format.section_heading` (default: `## Handler:`). This
-is the format that downstream skills (crate-writer, test-writer) expect.
-code-analyzer and epic-analyzer also produce this format. The heading
-conventions (section, requirement, scenario, delta operations) are all
-configurable via the `spec_format` section in `schema.yaml`.
+New crate specs and promoted baselines use a flat requirement format. The
+schema's `spec_format` defines the requirement, scenario, and delta-operation
+headings used by all downstream skills.
 
 ```markdown
 # <Crate Name> Specification
 
-## Handler: <handler-name>
+## Purpose
 
-### Purpose
+<1-2 sentence description of what this crate or capability does>
 
-<1-2 sentence description of what this handler or capability does>
-
-### Requirements
-
-#### Requirement: <Behavior Name>
+### Requirement: <Behavior Name>
 
 The system SHALL <behavioral description>.
 Source: <source function, JIRA story, or design section>
 
-##### Scenario: <Happy Path>
+#### Scenario: <Happy Path>
 
 - **WHEN** <trigger or input>
 - **THEN** <expected behavior>
 
-##### Scenario: <Error Case>
+#### Scenario: <Error Case>
 
 - **WHEN** <invalid input or failing condition>
 - **THEN** <expected error behavior>
 
-### Error Conditions
+## Error Conditions
 
 - <error type>: <description and trigger conditions>
 
-### Metrics
+## Metrics
 
 - `<metric_name>` — type: <counter|gauge|histogram>; emitted: <when>
 ```
@@ -95,8 +88,8 @@ Source: <source function, JIRA story, or design section>
 
 When modifying an existing crate, delta specs use the operation headers
 defined in the schema's `spec_format.delta_operations` (default:
-`## ADDED Requirements`, `## MODIFIED Requirements`, etc.) with
-`### Requirement:` and `#### Scenario:` at shallower heading depth.
+`## ADDED Requirements`, `## MODIFIED Requirements`, etc.) with the same
+`### Requirement:` and `#### Scenario:` headings as the baseline format.
 See the schema's `templates/spec-delta.md` for the template and the
 archive skill for how deltas merge into the baseline.
 
@@ -251,7 +244,7 @@ Use explicit unknown markers instead of guessing.
 ### Behavioral Specs
 
 - [ ] One spec file per capability or crate
-- [ ] Each spec has Purpose, Requirements, Scenarios, and Error Conditions
+- [ ] Each spec has Purpose, flat Requirement blocks, Scenarios, and Error Conditions
 - [ ] Specs stay behavioral and avoid platform-binding detail
 - [ ] Traceability is present for each requirement
 

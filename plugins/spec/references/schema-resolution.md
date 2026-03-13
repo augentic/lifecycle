@@ -116,7 +116,7 @@ merges the child on top.
   entirely; new `id`s are appended to the parent's list. Dependency order
   is recomputed from the merged `requires` graph.
 - **`spec_format`**: child overrides parent field-by-field (e.g., child
-  can override `section_heading` without restating `delta_operations`).
+  can override `requirement_heading` without restating `delta_operations`).
 - **`apply`**: child `requires` replaces parent `requires`; child
   `instruction` replaces parent `instruction`; child `tracks` replaces
   parent `tracks`. Omitted fields inherit from parent.

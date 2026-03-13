@@ -4,30 +4,30 @@ How Specify spec scenarios map to test functions. This mapping is deterministic 
 
 ## Mapping Rules
 
-### Handler to Test File
+### Spec File to Test File
 
-Each `## Handler: <name>` section in the spec maps to a test file:
+Each spec file maps to a primary test file:
 
 ```
-## Handler: GetWorksite  →  tests/get_worksite.rs
-## Handler: CreateOrder  →  tests/create_order.rs
+specs/worksite/spec.md  →  tests/worksite.rs
+specs/order/spec.md     →  tests/order.rs
 ```
 
-Naming convention: snake_case of the handler name.
+Naming convention: snake_case of the spec directory name.
 
 ### Scenario to Test Function
 
-Each scenario under a handler maps to one test function:
+Each scenario under a requirement maps to one test function:
 
 ```
-##### Scenario: Successful worksite retrieval
-  →  #[tokio::test] async fn test_get_worksite_successful_retrieval()
+#### Scenario: Successful worksite retrieval
+  →  #[tokio::test] async fn test_worksite_successful_retrieval()
 
-##### Scenario: Worksite not found
-  →  #[tokio::test] async fn test_get_worksite_not_found()
+#### Scenario: Worksite not found
+  →  #[tokio::test] async fn test_worksite_not_found()
 ```
 
-Naming convention: `test_<handler_snake>_<scenario_snake>`.
+Naming convention: `test_<spec_name_snake>_<scenario_snake>`.
 
 ### WHEN Clause to Test Setup
 
@@ -60,17 +60,17 @@ Each scenario becomes its own test. A requirement with 3 scenarios produces 3 te
 
 ```markdown
 ### Requirement: Worksite data retrieval
-##### Scenario: Successful retrieval
-##### Scenario: Worksite not found
-##### Scenario: External API timeout
+#### Scenario: Successful retrieval
+#### Scenario: Worksite not found
+#### Scenario: External API timeout
 ```
 
 Produces:
 
 ```rust
-#[tokio::test] async fn test_get_worksite_successful_retrieval() { ... }
-#[tokio::test] async fn test_get_worksite_not_found() { ... }
-#[tokio::test] async fn test_get_worksite_external_api_timeout() { ... }
+#[tokio::test] async fn test_worksite_successful_retrieval() { ... }
+#[tokio::test] async fn test_worksite_not_found() { ... }
+#[tokio::test] async fn test_worksite_external_api_timeout() { ... }
 ```
 
 ### Validation Requirements
@@ -79,7 +79,7 @@ Validation requirements in specs often produce tests for `from_input()`:
 
 ```markdown
 ### Requirement: Input validation
-##### Scenario: Missing worksite code
+#### Scenario: Missing worksite code
 - WHEN request has empty worksite_code
 - THEN system returns BadRequest with code "missing_worksite_code"
 ```
@@ -88,7 +88,7 @@ Produces a test that constructs invalid input and asserts the error:
 
 ```rust
 #[tokio::test]
-async fn test_get_worksite_missing_worksite_code() {
+async fn test_worksite_missing_worksite_code() {
     let provider = MockProvider::new();
     let client = Client::new("owner").provider(provider.clone());
 
@@ -103,9 +103,9 @@ async fn test_get_worksite_missing_worksite_code() {
 Each generated test should include a traceability comment linking back to the spec:
 
 ```rust
-/// Spec: specs/fleet-api/spec.md > Handler: GetWorksite > Scenario: Successful retrieval
+/// Spec: specs/fleet-api/spec.md > Requirement: Worksite data retrieval > Scenario: Successful retrieval
 #[tokio::test]
-async fn test_get_worksite_successful_retrieval() { ... }
+async fn test_fleet_api_successful_retrieval() { ... }
 ```
 
 This enables automated drift detection: parse test comments to find the source scenario, then verify the scenario still exists in the spec with matching WHEN/THEN clauses.
@@ -114,7 +114,7 @@ This enables automated drift detection: parse test comments to find the source s
 
 ### Detecting Missing Tests
 
-1. Parse all `## Handler:` and `##### Scenario:` entries from the spec
+1. Parse all `### Requirement:` and `#### Scenario:` entries from the spec
 2. Parse all `#[tokio::test]` function names from `tests/*.rs`
 3. For each scenario, check if a corresponding test function exists
 4. Report scenarios without tests as **missing coverage**

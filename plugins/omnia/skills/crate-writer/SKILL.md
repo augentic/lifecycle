@@ -342,7 +342,7 @@ Before starting code generation, verify artifact completeness per [checklists.md
 ### Generation Process
 
 1. Read Specify artifacts from `$CHANGE_DIR`:
-   - Read the spec file from `$SPECS_DIR/$CRATE_NAME/spec.md` (single consolidated file with `## Handler:` sections)
+   - Read the spec file from `$SPECS_DIR/$CRATE_NAME/spec.md` (single consolidated file with flat `### Requirement:` / `#### Scenario:` blocks)
    - Read design.md from `$DESIGN_PATH`
 2. **Derive Omnia capabilities from artifacts:**
    - Read the design.md **Source Capabilities Summary** checklist and map each checked capability to an Omnia provider trait using [capability-mapping.md](references/capability-mapping.md).

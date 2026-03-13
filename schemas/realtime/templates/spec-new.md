@@ -1,3 +1,5 @@
+# Realtime New Spec Template
+
 Use this template for capabilities listed under **New Capabilities** in the
 proposal. This format matches what code-analyzer produces, and is what
 crate-writer and test-writer expect as input.
@@ -5,35 +7,31 @@ crate-writer and test-writer expect as input.
 ```markdown
 # <Capability Name> Specification
 
-## Handler: <handler-name>
+## Purpose
 
-### Purpose
+<1-2 sentence description of what this capability does>
 
-<1-2 sentence description of what this handler does>
-
-### Requirements
-
-#### Requirement: <Behavior Name>
+### Requirement: <Behavior Name>
 
 The system SHALL <behavioral description>.
 
-##### Scenario: <Happy Path>
+#### Scenario: <Happy Path>
 
 - **WHEN** <trigger or input>
 - **THEN** <expected behavior>
 
-##### Scenario: <Error Case>
+#### Scenario: <Error Case>
 
 - **WHEN** <invalid input or failing condition>
 - **THEN** <expected error behavior>
 
-### Error Conditions
+## Error Conditions
 
 - <error type>: <description and trigger conditions>
 
-### Metrics
+## Metrics
 
 - `<metric_name>` — type: <counter|gauge|histogram>; emitted: <when>
 ```
 
-Repeat `## Handler:` sections for each handler in the capability.
+Repeat `### Requirement:` blocks for each distinct behavior in the capability.
