@@ -82,7 +82,8 @@ When ready to implement, run /spec:apply
 
    For each artifact:
    - Read any completed dependency files for context
-   - Create the artifact file using the template and instruction below
+   - Read the corresponding reference file from `references/` (e.g., `references/proposal.md`) to get the Template and Instruction.
+   - Create the artifact file using that content.
    - Apply `context` and `rules` from config.yaml as constraints -- but do NOT copy them into the file
    - Verify the file exists after writing before proceeding to next
 
@@ -90,203 +91,29 @@ When ready to implement, run /spec:apply
 
    ### Artifact: proposal
 
+   **Reference**: `references/proposal.md`
    **Write to**: `.specify/changes/<name>/proposal.md`
-
-   **Template**:
-   ```markdown
-   ## Why
-
-   ## Source
-
-   ## What Changes
-
-   ## Capabilities
-
-   ### New Capabilities
-
-   ### Modified Capabilities
-
-   ## Impact
-   ```
-
-   **Instruction**:
-   Create the proposal document that establishes WHY this change is needed.
-
-   Sections:
-   - **Why**: 1-2 sentences on the problem or opportunity. What problem does this solve? Why now?
-   - **Source**: Identify where the requirements come from. Pick ONE based on the project schema:
-
-     **For 'omnia' schema:**
-     - **Epic**: JIRA/ADO/Linear epic key (e.g., `ATR-7102`). This triggers the Plan workflow -- the specs phase will run epic-analyzer.
-     - **Manual**: Requirements are described directly in this proposal. This is the default workflow -- specs and design are written by hand.
-
-     **For 'realtime' schema:**
-     - **Repository**: URL of the repository to migrate (e.g., `https://github.com/org/repo`). This triggers the RT workflow -- the specs phase will clone the repo and run code-analyzer.
-     - **Manual**: Requirements are described directly in this proposal. This is the default workflow -- specs and design are written by hand.
-   - **What Changes**: Bullet list of changes. Be specific about new capabilities, modifications, or removals. Mark breaking changes with **BREAKING**.
-   - **Capabilities**: Identify which specs will be created or modified:
-     - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names (e.g., `user-auth`, `data-export`).
-     - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behavior changes (not just implementation details). Each needs a delta spec file. Check `.specify/specs/` for existing spec names. Leave empty if no requirement changes.
-     - For **Repository** or **Epic** sources, capabilities will be determined by the analyzer skill. List expected capabilities if known, but analyzer output takes precedence.
-   - **Impact**: Affected code, APIs, dependencies, or systems.
-
-   IMPORTANT: The Capabilities section creates the contract between proposal and specs phases. For manual sources, research existing specs before filling this in -- each capability listed will need a corresponding spec file. For repository or epic sources, the analyzer discovers capabilities automatically.
-
-   Keep it concise (1-2 pages). Focus on the "why" not the "how" -- implementation details belong in design.md.
 
    ---
 
    ### Artifact: specs
 
+   **Reference**: `references/spec.md`
    **Write to**: `.specify/changes/<name>/specs/<capability>/spec.md` (one per capability)
-
-   **Template** (for delta specs):
-   ```markdown
-   ## ADDED Requirements
-
-   ### Requirement: <!-- requirement name -->
-   <!-- requirement text -->
-
-   #### Scenario: <!-- scenario name -->
-   - **WHEN** <!-- condition -->
-   - **THEN** <!-- expected outcome -->
-   ```
-
-   **Instruction**:
-   Create specification files that define WHAT the system should do.
-
-   First, read the proposal's **Source** section to determine the workflow:
-
-   **RT path** (Source is a repository URL):
-   1. Clone the source repository. Invoke `/rt:git-cloner` with arguments: `<repo-url> legacy/ true`
-   2. Generate specs and design. Invoke `/rt:code-analyzer` with arguments: `legacy/<repo-name> <change-dir>`
-   3. Review the generated specs for completeness and adjust if needed.
-   4. Proceed to the next artifact. design.md was already produced by code-analyzer -- the design phase will review/enrich it.
-
-   **Plan path** (Source is a JIRA/ADO/Linear epic key):
-   1. Generate specs and design. Invoke `/plan:epic-analyzer` with arguments: `<epic-key> <change-dir>`
-   2. Review the generated specs for completeness and adjust if needed.
-   3. Proceed to the next artifact. design.md was already produced by epic-analyzer -- the design phase will review/enrich it.
-
-   **Manual path** (Source is "Manual" or absent):
-   Create one spec file per capability listed in the proposal's Capabilities section.
-
-   Guidelines:
-   - New capabilities: use the exact kebab-case name from the proposal (`specs/<capability>/spec.md`).
-   - Modified capabilities: use the existing spec folder name from `.specify/specs/<capability>/` when creating the delta spec at `specs/<capability>/spec.md`.
-
-   Delta operations (use `##` headers):
-   - **ADDED Requirements**: New capabilities
-   - **MODIFIED Requirements**: Changed behavior -- MUST include full updated content.
-   - **REMOVED Requirements**: Deprecated features -- MUST include **Reason** and **Migration**.
-   - **RENAMED Requirements**: Name changes only -- use `FROM:`/`TO:` format
-
-   Format requirements:
-   - Each requirement: `### Requirement: <name>` followed by description
-   - Use SHALL/MUST for normative requirements (avoid should/may)
-   - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
-   - **CRITICAL**: In delta specs, scenarios MUST use exactly 4 hashtags (`####`). In full baseline specs organized under `## Handler:` sections, scenarios are one level deeper at `#####`. Using fewer hashtags or bullets will fail silently.
-   - Every requirement MUST have at least one scenario.
-
-   MODIFIED requirements workflow:
-   1. Locate the existing requirement in `.specify/specs/<capability>/spec.md`
-   2. Copy the ENTIRE requirement block (from `### Requirement:` through all scenarios).
-   3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior.
-   4. Ensure header text matches exactly (whitespace-insensitive)
-
-   Specs should be testable -- each scenario is a potential test case.
 
    ---
 
    ### Artifact: design
 
+   **Reference**: `references/design.md`
    **Write to**: `.specify/changes/<name>/design.md`
-
-   **Template**:
-   ```markdown
-   ## Context
-
-   ## Domain Model
-
-   ## API Contracts
-
-   ## External Services
-
-   ## Constants & Configuration
-
-   ## Business Logic
-
-   ## Publication & Timing Patterns
-
-   ## Implementation Constraints
-
-   ## Source Capabilities Summary
-
-   ## Dependencies
-
-   ## Risks / Open Questions
-
-   ## Notes
-   ```
-
-   **Instruction**:
-   Create the design document to explain HOW to implement the change.
-
-   Create full design if any of the following apply:
-   - Cross-cutting change (multiple services/modules) or new architectural pattern
-   - New external dependency or significant data model changes
-   - Security, performance, or migration complexity
-   - Ambiguity that benefits from technical decisions before coding
-
-   If none of the above apply, create a minimal design.md noting that a full design is not warranted and referencing the proposal and specs.
-
-   Required sections (see template):
-   - **Context**: Source, purpose, background, and current state
-   - **Domain Model**: Entity and type definitions with field names, types, wire names, and optionality
-   - **API Contracts**: Endpoints with method, path, request/response shapes, and error responses
-   - **External Services**: Name, type (API, table store, cache, message broker), authentication method
-   - **Constants & Configuration**: All config keys with descriptions and defaults
-   - **Business Logic**: Per-handler tagged pseudocode using `[domain]`, `[infrastructure]`, `[mechanical]` tags. Include required provider traits per handler.
-   - **Publication & Timing Patterns**: Topics, message shapes, timing
-   - **Implementation Constraints**: Platform or runtime constraints
-   - **Source Capabilities Summary**: Checklist of required capabilities
-   - **Dependencies**: External packages or services
-   - **Risks / Open Questions**: Known risks and unresolved decisions
-   - **Notes**: Additional observations
-
-   Focus on the technical shape needed for implementation. Reference the proposal for motivation and specs for behavioral requirements. Use mermaid diagrams for entity relationships and flows.
 
    ---
 
    ### Artifact: tasks
 
+   **Reference**: `references/tasks.md`
    **Write to**: `.specify/changes/<name>/tasks.md`
-
-   **Template**:
-   ```markdown
-   ## 1. <!-- Task Group Name -->
-
-   - [ ] 1.1 <!-- Task description -->
-   - [ ] 1.2 <!-- Task description -->
-
-   ## 2. <!-- Task Group Name -->
-
-   - [ ] 2.1 <!-- Task description -->
-   - [ ] 2.2 <!-- Task description -->
-   ```
-
-   **Instruction**:
-   Create the task list that breaks down the implementation work.
-
-   **IMPORTANT: Follow the template exactly.** The apply phase parses checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
-
-   Guidelines:
-   - Group related tasks under `##` numbered headings
-   - Each task MUST be a checkbox: `- [ ] X.Y Task description`
-   - Tasks should be small enough to complete in one session
-   - Order tasks by dependency (what must be done first?)
-
-   Reference specs for what needs to be built, design for how to build it. Each task should be verifiable -- you know when it's done.
 
 7. **Show final status**
 
