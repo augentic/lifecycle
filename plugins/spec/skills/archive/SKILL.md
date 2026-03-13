@@ -2,9 +2,6 @@
 name: archive
 description: Archive a completed change. Merges delta specs into baseline and moves the change to the archive. Use when the user wants to finalize a change after implementation is complete.
 license: MIT
-metadata:
-  author: specify
-  version: "2.0"
 ---
 
 Archive a completed change.

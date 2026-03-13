@@ -8,7 +8,7 @@ Explain the motivation for this change. What problem does this solve?
 
 <!-- 
 Identify where the requirements come from. Pick ONE:
-- **Epic**: JIRA/ADO/Linear epic key (e.g., ATR-7102)
+- **Repository**: URL of the repository to migrate (e.g., https://github.com/org/repo)
 - **Manual**: Requirements described directly in this proposal
 -->
 

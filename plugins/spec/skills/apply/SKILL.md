@@ -2,9 +2,6 @@
 name: apply
 description: Implement tasks from a Specify change. Use when the user wants to start implementing, continue implementation, or work through tasks.
 license: MIT
-metadata:
-  author: specify
-  version: "2.0"
 ---
 
 Implement tasks from a Specify change.
@@ -85,9 +82,9 @@ Implement tasks from a Specify change.
    5. (Optional) `/omnia:code-reviewer <CRATE_PATH>` -- AI code review for security, WASM constraints, and quality.
 
    **Update mode** (Cargo.toml exists -- incremental change):
-   1. Use the `/omnia:crate-writer` skill to update the domain crate. Run the skill from start to finish.
-   2. Use the `/omnia:test-writer` skill to regenerate or update tests to match changed specs. Run the skill from start to finish.
-   3. Verify from CRATE_PATH (repair loop -- max 3 iterations): same as create mode steps a/b/c.
+   6. Use the `/omnia:crate-writer` skill to update the domain crate. Run the skill from start to finish.
+   7. Use the `/omnia:test-writer` skill to regenerate or update tests to match changed specs. Run the skill from start to finish.
+   8. Verify from CRATE_PATH (repair loop -- max 3 iterations): same as create mode steps a/b/c.
 
    For each pending task:
    - Show which task is being worked on

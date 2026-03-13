@@ -1,6 +1,6 @@
-name: omnia
+name: realtime
 version: 1
-description: Omnia workflow
+description: Realtime workflow
 
 artifacts:
   - id: proposal
@@ -14,8 +14,9 @@ artifacts:
       - **Why**: 1-2 sentences on the problem or opportunity. What problem does
         this solve? Why now?
       - **Source**: Identify where the requirements come from. Pick ONE:
-        - **Epic**: JIRA/ADO/Linear epic key (e.g., `ATR-7102`). This triggers
-          the Omnia workflow — the specs phase will run epic-analyzer.
+        - **Repository**: URL of the repository to migrate (e.g.,
+          `https://github.com/org/repo`). This triggers the RT workflow
+          — the specs phase will clone the repo and run code-analyzer.
         - **Manual**: Requirements are described directly in this proposal.
           This is the default workflow — specs and design are written by hand.
       - **What Changes**: Bullet list of changes. Be specific about new
@@ -30,15 +31,16 @@ artifacts:
           changes (not just implementation details). Each needs a delta spec
           file. Check `.specify/specs/` for existing spec names. Leave empty if
           no requirement changes.
-        - For **Epic** sources, capabilities will be determined by the
-          analyzer skill. List expected capabilities if known, but analyzer
-          output takes precedence.
+        - For **Repository** sources, capabilities will be determined by
+          the analyzer skill. List expected capabilities if known, but
+          analyzer output takes precedence.
       - **Impact**: Affected code, APIs, dependencies, or systems.
 
       IMPORTANT: The Capabilities section creates the contract between proposal
       and specs phases. For manual sources, research existing specs before
       filling this in — each capability listed will need a corresponding spec
-      file. For epic sources, the analyzer discovers capabilities automatically.
+      file. For repository sources, the analyzer discovers capabilities
+      automatically.
 
       Keep it concise (1-2 pages). Focus on the "why" not the "how" - 
       implementation details belong in design.md.
@@ -57,17 +59,20 @@ artifacts:
 
       ---
 
-      **Omnia path** (Source is a JIRA/ADO/Linear epic key):
+      **RT path** (Source is a repository URL):
 
-        Prerequisite: The Omnia plugin must be loaded for JIRA MCP access.
-
-        1. Generate specs and design. Invoke `/plan:epic-analyzer` with
+        1. Clone the source repository. Invoke `/rt:git-cloner` with
            arguments:
-             <epic-key> <change-dir>
-           epic-analyzer produces `proposal.md`, `specs/`, and `design.md`.
-        2. Review the generated specs for completeness and adjust if needed.
-        3. Proceed to the next artifact. design.md was already produced by
-           epic-analyzer — the design phase will review/enrich it.
+             <repo-url> legacy/ true
+           This clones the repo into `legacy/<repo-name>` as a detached tree.
+        2. Generate specs and design. Invoke `/rt:code-analyzer` with
+           arguments:
+             legacy/<repo-name> <change-dir>
+           code-analyzer produces both `specs/` and `design.md` in a single
+           pass.
+        3. Review the generated specs for completeness and adjust if needed.
+        4. Proceed to the next artifact. design.md was already produced by
+           code-analyzer — the design phase will review/enrich it.
 
       ---
 

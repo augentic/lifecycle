@@ -2,9 +2,6 @@
 name: init
 description: Initialize Specify in a project. Creates the .specify/ directory structure and config.yaml. Use when setting up a new project for spec-driven development.
 license: MIT
-metadata:
-  author: specify
-  version: "2.0"
 ---
 
 Initialize Specify in this project.
