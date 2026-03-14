@@ -70,12 +70,11 @@ Implement tasks from a Specify change.
 
    Read the apply instruction file from the resolved schema directory (the file path is given by `apply.instruction` in `schema.yaml`).
 
-   Follow the detailed implementation steps from the instruction file, including:
-   - Arguments used by skills
-   - Mode detection (Create vs Update)
-   - Step-by-step execution for each mode
+   **Skill directive tags**: Before starting each task, check whether it contains an HTML comment tag in the form `<!-- skill: plugin:skill-name -->`. If present, invoke that skill directly instead of following the default mode-detection logic. For example, a task tagged `<!-- skill: omnia:crate-writer -->` should be handled by running `/omnia:crate-writer` with the standard arguments. Tasks without a skill tag follow the instruction file's mode detection and step-by-step execution as before.
 
    For each pending task:
+   - Check for a skill directive tag and invoke the named skill if present
+   - Otherwise follow the instruction file (arguments, mode detection, step-by-step execution)
    - Show which task is being worked on
    - Make the code changes required
    - Keep changes minimal and focused

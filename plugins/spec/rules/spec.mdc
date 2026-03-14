@@ -7,9 +7,9 @@ alwaysApply: true
 
 ## Overview
 
-This plugin provides the core Specify workflow skills: propose a change, review artifacts with structured checks, apply (implement) a change, archive a completed change, abandon a discarded change, explore ideas or problems interactively, check status, and initialize new projects. These skills orchestrate the human-driven Specify lifecycle that the specialist plugins (Omnia, RT, Plan) build on.
+This plugin provides the core Specify workflow skills: propose a change, review artifacts with structured checks, apply (implement) a change, archive a completed change, abandon a discarded change, verify code-to-spec consistency, explore ideas or problems interactively, check status, and initialize new projects. These skills orchestrate the human-driven Specify lifecycle that the specialist plugins (Omnia, RT, Plan) build on.
 
-**Purpose**: Drive the propose -> review -> apply -> archive workflow, with abandon for cleanup and explore for thinking and investigation.
+**Purpose**: Drive the propose -> review -> apply -> archive workflow, with abandon for cleanup, verify for drift detection, and explore for thinking and investigation.
 
 ## Plugin Architecture
 
@@ -31,6 +31,7 @@ This plugin provides the core Specify workflow skills: propose a change, review 
     ├── archive/           # Archive a completed change
     ├── abandon/           # Discard a change without merging specs
     ├── explore/           # Thinking partner for ideas and investigation
+    ├── verify/            # Detect drift between code and baseline specs
     └── status/            # Check change status and progress
 ```
 
@@ -78,6 +79,7 @@ proposed  -----------------------------------------> abandoned
                                           |
                                      /spec:explore (anytime)
                                      /spec:status  (anytime)
+                                     /spec:verify  (after archive, detect drift)
                                      /spec:abandon (discard instead of archive)
 ```
 
@@ -87,6 +89,7 @@ proposed  -----------------------------------------> abandoned
 - **apply**: Implement tasks from an existing change, marking them complete as you go
 - **archive**: Preview merge operations, finalize a completed change, merge delta specs into baseline
 - **abandon**: Discard an active change, set `status: abandoned`, and move it to archive without merging specs
+- **verify**: Compare current code against baseline specs to detect drift -- read-only
 - **explore**: Read-only thinking mode for investigating problems and clarifying requirements
 - **status**: Check lifecycle status, artifact completion, task progress, and active/archived changes
 
@@ -117,6 +120,7 @@ proposed  -----------------------------------------> abandoned
 - [Apply SKILL.md](skills/apply/SKILL.md) - Implement change tasks
 - [Archive SKILL.md](skills/archive/SKILL.md) - Finalize completed changes
 - [Abandon SKILL.md](skills/abandon/SKILL.md) - Discard a change without merging specs
+- [Verify SKILL.md](skills/verify/SKILL.md) - Detect drift between code and baseline specs
 - [Explore SKILL.md](skills/explore/SKILL.md) - Thinking and investigation mode
 - [Status SKILL.md](skills/status/SKILL.md) - Check status and progress
 - [Specify Artifact Specification](../references/specify.md) - Artifact format details

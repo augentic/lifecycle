@@ -1,6 +1,6 @@
 # Specify Guidance Supplement
 
-This repository uses stock Specify as the executable workflow contract. This document is a repository-specific supplement describing how Augentic specialists use `proposal.md`, `spec.md`, `design.md`, and `tasks.md` during `/spec:propose -> /spec:apply -> /spec:archive`, with `/spec:abandon` available when a change should be discarded instead of promoted.
+This repository uses stock Specify as the executable workflow contract. This document is a repository-specific supplement describing how Augentic specialists use `proposal.md`, `spec.md`, `design.md`, and `tasks.md` during `/spec:propose -> /spec:apply -> /spec:archive`, with `/spec:abandon` available when a change should be discarded instead of promoted and `/spec:verify` available to detect drift between code and baseline specs.
 
 ## Overview
 
@@ -29,6 +29,7 @@ The human workflow is:
 /spec:propose -> /spec:apply -> /spec:archive
 /spec:propose -> /spec:abandon
 /spec:apply   -> /spec:abandon
+/spec:verify  (anytime -- compare code against baseline specs)
 ```
 
 ## Artifact Locations
@@ -221,6 +222,18 @@ Use `tasks.md` as an implementation checklist, not as another requirements or de
 ```
 
 Tasks should describe sequencing, checkpoints, and ownership. They should not introduce new behavioral requirements.
+
+### Skill Directive Tags
+
+Tasks may optionally include a skill directive as an HTML comment. The apply phase parses these tags and delegates the task to the named specialist skill instead of following the default apply instruction.
+
+```markdown
+- [ ] 2.1 Generate the domain crate <!-- skill: omnia:crate-writer -->
+- [ ] 2.2 Generate test suites <!-- skill: omnia:test-writer -->
+- [ ] 2.3 Manual integration step
+```
+
+Tasks without a skill tag are implemented via the schema's default apply instruction (mode detection, verification loop, etc.). Use skill tags when a task maps directly to a single specialist skill invocation.
 
 ## Tags Reference
 

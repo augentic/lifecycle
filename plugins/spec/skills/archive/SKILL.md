@@ -97,71 +97,49 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
 
 6. **Merge delta specs into baseline**
 
-   **For each capability with a delta spec**, perform the merge:
+   **For each capability with a delta spec**, invoke the deterministic merge tool:
 
-   a. **Read the delta spec** from `.specify/changes/<name>/specs/<capability>/spec.md`
+   a. **Set paths**:
+      - `SCHEMA` = resolved `schema.yaml` path
+      - `DELTA` = `.specify/changes/<name>/specs/<capability>/spec.md`
+      - `BASELINE` = `.specify/specs/<capability>/spec.md` (may not exist yet)
+      - `OUTPUT` = same as `BASELINE`
 
-   b. **Check if a baseline exists** at `.specify/specs/<capability>/spec.md`
+   b. **If NO baseline exists** (new capability): create the `.specify/specs/<capability>/` directory.
 
-   c. **If NO baseline exists** (new capability):
-      - Create `.specify/specs/<capability>/` directory
-      - Check whether the spec contains any delta operation headers (the headings from `spec_format.delta_operations` in `schema.yaml`)
-      - If the spec does NOT contain delta operation headers: copy the entire content as the new baseline directly — it is already in baseline format
-      - If the spec DOES contain delta operation headers: extract only the requirement blocks (matching `spec_format.requirement_heading` and `spec_format.requirement_id_prefix`) from the ADDED section and write them as the baseline. Ignore MODIFIED/REMOVED/RENAMED sections (they don't apply to a new baseline).
-      - Write the result as the new baseline at `.specify/specs/<capability>/spec.md`
+   c. **Run the merge tool**:
 
-   d. **If a baseline EXISTS** (existing capability):
-      - Read the baseline from `.specify/specs/<capability>/spec.md`
-      - Parse the delta spec to identify sections by the headings defined in `schema.yaml`'s `spec_format.delta_operations` (case-insensitive matching)
-      - Parse each requirement block's stable ID from the line that starts with `spec_format.requirement_id_prefix`
-      - Apply operations in **this exact order** (order matters):
+      ```bash
+      python3 scripts/merge-specs.py \
+        --schema "$SCHEMA" \
+        --delta "$DELTA" \
+        --baseline "$BASELINE" \
+        --output "$OUTPUT"
+      ```
 
-      **Step 1 -- RENAMED** (must happen first so MODIFIED/REMOVED use the updated display name):
-      - Look for `ID:` and `TO:` lines within the RENAMED section
-      - For each pair, find the matching requirement block in the baseline by requirement ID
-      - Change its requirement heading to use the TO name while preserving the existing `ID:` line
-      - If the ID is not found in the baseline, report an error
+      If the baseline does not exist yet, omit `--baseline` and the tool creates a new baseline from the delta's ADDED section (or copies the delta verbatim when it has no delta operation headers).
 
-      **Step 2 -- REMOVED**:
-      - For each requirement in the REMOVED section, delete the entire matching block from the baseline by requirement ID
-      - If the ID is not found in the baseline, report an error
-
-      **Step 3 -- MODIFIED**:
-      - For each requirement in the MODIFIED section, find the matching block in the baseline by requirement ID and replace it entirely with the version from the delta
-      - If the ID is not found in the baseline, report an error
-
-      **Step 4 -- ADDED**:
-      - Append each requirement block from the ADDED section to the end of the baseline
-      - If an added requirement ID already exists in the baseline, report an error
-
-      - Write the merged result to `.specify/specs/<capability>/spec.md`
-
-   e. **Verify the merge**: Re-read the merged baseline and confirm it looks structurally correct (has proper requirement headings, a stable `ID:` line after each heading, no duplicate IDs, and no orphaned content).
-
-   **What is a requirement block?**
-   A requirement block starts at a requirement heading (as defined in `spec_format.requirement_heading`), includes the immediately following `ID:` line, and continues until the next requirement heading or the next `##` header or end of file. This includes the description text, all scenario sub-sections, and any other content within the block.
-
-   **Preserve preamble**: Any text before the first requirement heading or `##` header in the baseline should be preserved as-is.
+   d. **Check the exit code**:
+      - Exit 0: merge succeeded. Proceed to the next capability.
+      - Exit 1: merge failed. Display the error messages from stderr and stop. Use the **AskQuestion tool** to let the user decide whether to fix the delta and retry, or abort the archive.
 
 7. **Baseline coherence check**
 
-   After all merges complete, validate the entire baseline under `.specify/specs/` to catch inconsistencies that valid individual changes may introduce when merged sequentially.
+   After all merges complete, validate every spec file that was created or updated. For each file, run:
 
-   For every spec file that was created or updated by the merge in step 6:
+   ```bash
+   python3 scripts/merge-specs.py \
+     --schema "$SCHEMA" \
+     --validate ".specify/specs/<capability>/spec.md" \
+     --design ".specify/changes/<name>/design.md"
+   ```
 
-   a. **No duplicate requirement IDs**: Scan for all lines starting with `spec_format.requirement_id_prefix`. Report an error if any ID value appears more than once in the same file.
+   Omit `--design` if `design.md` does not exist.
 
-   b. **No duplicate requirement names**: Scan for all lines matching `spec_format.requirement_heading`. Report an error if any requirement display name appears more than once in the same file.
+   The tool checks: no duplicate IDs, no duplicate requirement names, valid heading structure (ID line after each requirement heading, ID matches pattern, at least one scenario per requirement), and no orphaned design references.
 
-   c. **Heading structure valid**: For each requirement block, verify:
-      - A line starting with `spec_format.requirement_id_prefix` follows the requirement heading
-      - The ID matches `spec_format.requirement_id_pattern`
-      - At least one `spec_format.scenario_heading` exists within the requirement block
-
-   d. **No orphaned design references**: If `.specify/changes/<name>/design.md` exists, scan it for requirement ID references matching `spec_format.requirement_id_pattern`. For each referenced ID, verify it exists in the baseline specs under `.specify/specs/`. Report any IDs referenced in design that no longer exist in the baseline.
-
-   **If any check fails:**
-   - Display the failures with file paths and details
+   **If any check fails** (exit code 1):
+   - Display the failures from stderr
    - Use the **AskQuestion tool**:
      - **Proceed anyway**: continue to archive despite the issues
      - **Abort**: leave the change in its current directory for manual correction (the merged baseline files are already written; the user can edit them before re-running archive)
@@ -278,9 +256,29 @@ The system SHALL authenticate users via OAuth 2.0 providers.
 
 - Always confirm the change before archiving
 - Warn on incomplete artifacts or tasks but don't block
-- Apply delta operations in strict order: RENAMED -> REMOVED -> MODIFIED -> ADDED
-- Use heading conventions from `schema.yaml`'s `spec_format` — do not hard-code heading patterns
-- Match requirements by stable ID, not by requirement title
-- Report errors if RENAMED/REMOVED/MODIFIED reference IDs not found in the baseline
-- After merging, verify the result by re-reading the merged file
-- If the merge looks wrong, stop and ask the user before proceeding to the move step
+- Use `scripts/merge-specs.py` for all merge and validation operations — do not perform merges inline
+- If the merge tool is unavailable (e.g., `python3` not installed), fall back to manual merge following the algorithm reference below
+- If the merge tool reports errors, stop and ask the user before proceeding
+
+## Merge Algorithm Reference
+
+The `scripts/merge-specs.py` tool implements this algorithm. The description is kept here for reference and as a fallback when the tool is unavailable.
+
+**What is a requirement block?**
+A requirement block starts at a requirement heading (as defined in `spec_format.requirement_heading`), includes the immediately following `ID:` line, and continues until the next requirement heading or the next `##` header or end of file. This includes the description text, all scenario sub-sections, and any other content within the block.
+
+**Preserve preamble**: Any text before the first requirement heading or `##` header in the baseline is preserved as-is.
+
+**New capability** (no baseline):
+
+- If the delta contains no delta operation headers: copy verbatim as the new baseline
+- If the delta contains delta operation headers: extract only requirement blocks from the ADDED section
+
+**Existing capability** (baseline exists) -- apply operations in strict order:
+
+1. **RENAMED**: For each `ID:` + `TO:` pair, find the matching requirement block by ID and update its heading. Preserve the `ID:` line.
+2. **REMOVED**: For each requirement, delete the matching block by ID.
+3. **MODIFIED**: For each requirement, replace the matching block by ID with the delta version.
+4. **ADDED**: Append each requirement block to the end of the baseline. Error if the ID already exists.
+
+Errors are reported for missing IDs (RENAMED/REMOVED/MODIFIED) or duplicate IDs (ADDED).
