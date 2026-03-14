@@ -1,3 +1,7 @@
+# Config for the Omnia schema
+
+#  Config can be used to provide project-level overrides for the Omnia schema.
+
 schema: https://github.com/augentic/specify/schemas/omnia
 
 context: |

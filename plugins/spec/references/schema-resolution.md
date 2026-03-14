@@ -181,8 +181,8 @@ produces the same schema across machines and branches.
 | Skill   | Files needed                                          |
 |---------|-------------------------------------------------------|
 | init    | `config.yaml`                                         |
-| propose | `schema.yaml`, `instructions/*`                       |
-| apply   | `schema.yaml`, `instructions/apply.md`                |
+| propose | `schema.yaml`, `config.yaml`, `instructions/*`        |
+| apply   | `schema.yaml`, `config.yaml`, `instructions/apply.md` |
 | archive | `schema.yaml`                                         |
 | abandon | `schema.yaml`                                         |
 | verify  | `schema.yaml`                                         |

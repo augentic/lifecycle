@@ -172,14 +172,34 @@ This executes `./scripts/checks.sh`, which requires `python3` and `bash`.
 
 ### Local plugin development
 
-To use a local checkout of the plugins in another project (for development or testing), symlink the plugins directory:
+To use a local checkout of the plugins in another project (for development or testing), symlink the plugins directory. 
+
+Be sure to replace `/path/to/augentic/specify` with the absolute path to your local clone of this repository.
+
+**Symlink skills:**
 
 ```bash
-mkdir .cursor && \
-ln -s /path/to/augentic/specify/plugins .cursor/plugins
+SPECIFY_REPO="path/to/augentic/specify"
+
+mkdir -p .cursor/skills && \
+for skill in "$SPECIFY_REPO"/plugins/*/skills/*; do
+    name="$(basename "$skill")"
+    ln -s "$skill" ".cursor/skills/$name"
+done
 ```
 
-Replace `/path/to/specify` with the absolute path to your local clone of this repository.
+**Use the symlinked skills:**
+
+```bash
+cat > .cursor/settings.json << 'EOF'
+{
+    "skills": {
+        "source": "local"
+    }
+}
+EOF
+echo "Created .cursor/settings.json"
+```
 
 ### Contributing
 

@@ -47,7 +47,9 @@ Contains the detailed generation or implementation instructions including
 output structure. Referenced by file path from `schema.yaml`'s
 `instruction` field.
 - `**config.yaml**`: Installed into `.specify/config.yaml` by `/spec:init`.
-Contains the `schema` URL, default `context`, and per-artifact `rules`.
+Contains the `schema` URL, default `context`, and default per-artifact
+`rules`. The project copy can override individual artifact keys (see
+Rules Override below).
 
 ## Schema Resolution
 
@@ -135,3 +137,31 @@ schema: https://github.com/augentic/specify/schemas/omnia
 The `/spec:init` skill installs the schema's `config.yaml` into
 `.specify/config.yaml`. Users customize `context` and `rules` after
 initialization.
+
+## Rules Override
+
+The schema's `config.yaml` provides default `rules` for each artifact
+(e.g., `proposal`, `specs`, `design`, `tasks`). When `/spec:init` installs
+the config, the project starts with these defaults.
+
+The override granularity is **per-artifact key**. If the project's
+`.specify/config.yaml` defines a non-empty value for `rules.<artifact-id>`,
+that value replaces the schema default for that artifact. Artifact keys
+that are absent or empty in the project config fall back to the schema
+default automatically.
+
+For example, to override the `specs` rules while keeping the schema
+defaults for all other artifacts:
+
+```yaml
+rules:
+  specs: |
+    - Use GIVEN/WHEN/THEN format for scenarios
+    - Include performance benchmarks in every scenario
+```
+
+Only `specs` is overridden; `proposal`, `design`, and `tasks` continue to
+use the schema defaults.
+
+Skills that consume rules (propose, apply) resolve the schema's
+`config.yaml` at runtime and apply this fallback per artifact.
