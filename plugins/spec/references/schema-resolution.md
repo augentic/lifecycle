@@ -46,11 +46,17 @@ When no `@ref` is present, `main` is used as the default ref.
    This step only runs when `$SCHEMA_VALUE` is a bare name (no `/`).
    URL-based schemas skip this step to ensure deterministic pinning.
 
-   Check if `schemas/$NAME/` exists in this plugin directory.
+   Check if `schemas/$NAME/` exists relative to the workspace root
+   (i.e., the root of the repository that contains the schema definitions).
    If found, use the local directory for all `$FILES_NEEDED`. Done.
 
    If not found and `$SCHEMA_VALUE` is a bare name, stop and report an
    error — bare names cannot fall through to remote resolution.
+
+   > **Note**: Bare-name resolution is a development convenience for
+   > working within the specify repository itself. Downstream projects
+   > should use URL-based schemas (with optional `@ref` pinning) to
+   > ensure reproducible resolution across machines.
 
 3. **Cache check** (skip for init)
 
@@ -176,7 +182,10 @@ produces the same schema across machines and branches.
 |---------|-------------------------------------------------------|
 | init    | `config.yaml`                                         |
 | propose | `schema.yaml`, `instructions/*`, `templates/*`        |
+| review  | `schema.yaml`                                         |
 | apply   | `schema.yaml`, `instructions/apply.md`                |
 | archive | `schema.yaml`                                         |
+| abandon | `schema.yaml`                                         |
+| verify  | `schema.yaml`                                         |
 | explore | `schema.yaml`                                         |
 | status  | `schema.yaml`                                         |

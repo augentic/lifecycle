@@ -57,8 +57,8 @@ Changes track their status in `.metadata.yaml`:
 
 ```text
 proposing -> proposed -> reviewed -> applying -> complete -> archived
-                \          \           \------> abandoned
-proposed  -----------------------------------------> abandoned
+    \           \          \           \
+     `--------> `--------> `--------> `--------> abandoned
 ```
 
 - **proposing**: Artifacts are being generated (propose in progress)

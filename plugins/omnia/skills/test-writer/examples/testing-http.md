@@ -47,9 +47,9 @@ pub struct EchoResponse {
 }
 
 impl<P: Config> Handler<P> for EchoRequest {
-    type Response = EchoResponse;
+    type Output = EchoResponse;
 
-    async fn handle(self, _provider: &P) -> anyhow::Result<Self::Response> {
+    async fn handle(self, _provider: &P) -> anyhow::Result<Self::Output> {
         Ok(EchoResponse {
             a: urlencoding::decode(&self.a)?.into_owned(),
             b: self.b,
@@ -69,10 +69,10 @@ pub struct GreetingResponse {
 }
 
 impl<P: Config> Handler<P> for GreetingRequest {
-    type Response = GreetingResponse;
+    type Output = GreetingResponse;
 
-    async fn handle(self, provider: &P) -> anyhow::Result<Self::Response> {
-        let name = provider.get("name").await?;
+    async fn handle(self, provider: &P) -> anyhow::Result<Self::Output> {
+        let name = Config::get(provider, "name").await?;
         Ok(GreetingResponse {
             respondent: name,
             reply: self.message,

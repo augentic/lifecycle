@@ -54,25 +54,25 @@ pub struct Post {
 }
 
 impl<P: Config + HttpRequest + StateStore> Handler<P> for PostRequest {
-    type Response = PostResponse;
+    type Output = PostResponse;
 
-    async fn handle(self, provider: &P) -> anyhow::Result<Self::Response> {
+    async fn handle(self, provider: &P) -> anyhow::Result<Self::Output> {
         let cache_key = format!("post-{}", self.id);
         
         // Check cache first
-        if let Some(cached) = provider.get(&cache_key).await? {
+        if let Some(cached) = StateStore::get(provider, &cache_key).await? {
             let item: Post = serde_json::from_slice(&cached)?;
             return Ok(PostResponse { item });
         }
         
         // Fetch from API
-        let base_url = provider.get("PROXY_URI").await?;
+        let base_url = Config::get(provider, "PROXY_URI").await?;
         let url = format!("{}/posts/{}", base_url, self.id);
         let request = http::Request::builder()
             .uri(url)
             .body(())?;
         
-        let response = provider.fetch(request).await?;
+        let response = HttpRequest::fetch(provider, request).await?;
         let raw_post: RawPost = serde_json::from_slice(&response.body())?;
         
         // Transform and cache
@@ -85,7 +85,7 @@ impl<P: Config + HttpRequest + StateStore> Handler<P> for PostRequest {
         };
         
         let cached_data = serde_json::to_vec(&post)?;
-        provider.set(&cache_key, &cached_data, Some(3600)).await?;
+        StateStore::set(provider, &cache_key, &cached_data, Some(3600)).await?;
         
         Ok(PostResponse { item: post })
     }

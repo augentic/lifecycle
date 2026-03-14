@@ -26,7 +26,7 @@ Artifacts move through the normal Specify lifecycle:
 The human workflow is:
 
 ```text
-/spec:propose -> /spec:apply -> /spec:archive
+/spec:propose -> /spec:review (optional) -> /spec:apply -> /spec:archive
 /spec:propose -> /spec:abandon
 /spec:apply   -> /spec:abandon
 /spec:verify  (anytime -- compare code against baseline specs)

@@ -44,13 +44,13 @@ pub struct PublishResponse {
 }
 
 impl<P: Config + Publish> Handler<P> for PublishRequest {
-    type Response = PublishResponse;
+    type Output = PublishResponse;
 
-    async fn handle(self, provider: &P) -> anyhow::Result<Self::Response> {
-        let topic = provider.get("PUB_SUB_TOPIC").await?;
+    async fn handle(self, provider: &P) -> anyhow::Result<Self::Output> {
+        let topic = Config::get(provider, "PUB_SUB_TOPIC").await?;
         
         let message = Message::new(self.message.as_bytes());
-        provider.send(&topic, &message).await?;
+        Publish::send(provider, &topic, &message).await?;
         
         Ok(PublishResponse {
             message: format!("Published: {}", self.message),

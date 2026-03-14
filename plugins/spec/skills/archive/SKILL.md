@@ -84,7 +84,7 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
    - Creating new baseline with N requirements
    ```
 
-   **Conflict detection**: For each capability with `type: modified` in `.metadata.yaml`'s `touched_capabilities` (if present), check if `.specify/specs/<capability>/spec.md` has been modified since `proposed_at` (compare file modification time). If the baseline has changed since the change was proposed:
+   **Conflict detection**: For each capability with `type: modified` in `.metadata.yaml`'s `touched_specs` (if present), check if `.specify/specs/<capability>/spec.md` has been modified since `proposed_at` (compare file modification time). If the baseline has changed since the change was proposed:
    - Warn: "The baseline for `<capability>` has been modified since this change was proposed (possibly by archiving another change)."
    - Use **AskQuestion tool**: proceed anyway, or cancel
 

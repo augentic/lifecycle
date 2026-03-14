@@ -2,9 +2,6 @@
 name: propose
 description: Propose a new change with all artifacts generated in one step. Use when the user wants to quickly describe what they want to build and get a complete proposal with design, specs, and tasks ready for implementation.
 license: MIT
-metadata:
-  author: specify
-  version: "3.0"
 ---
 
 # Propose Skill
@@ -96,12 +93,12 @@ The user's request should include a change name (kebab-case) OR a description of
    proposed_at: null
    apply_started_at: null
    completed_at: null
-   touched_capabilities: []
+   touched_specs: []
    ```
 
 6. **Check for overlapping changes**
 
-   Before creating specs, check if any other active change (in `.specify/changes/`, skipping `archive/`) also touches the same capabilities. Read each active change's `.metadata.yaml` for its `touched_capabilities` list. If any capability appears in both the current proposal's crates/capabilities list and another change's `touched_capabilities`:
+   Before creating specs, check if any other active change (in `.specify/changes/`, skipping `archive/`) also touches the same capabilities. Read each active change's `.metadata.yaml` for its `touched_specs` list. If any capability appears in both the current proposal's crates/capabilities list and another change's `touched_specs`:
    - Warn: "The capability `<name>` is also being modified by change `<other-change>`. This may cause conflicts at archive time."
    - This is informational only — do not block the proposal.
 
@@ -131,7 +128,7 @@ The user's request should include a change name (kebab-case) OR a description of
    Update `.specify/changes/<name>/.metadata.yaml`:
    - Set `status: proposed`
    - Set `proposed_at` to current ISO-8601 timestamp
-   - Set `touched_capabilities` from the spec files created — for each subdirectory in `.specify/changes/<name>/specs/`, record an entry with `name` (the directory name) and `type` (`new` if no baseline exists at `.specify/specs/<name>/spec.md`, `modified` if one does)
+   - Set `touched_specs` from the spec files created — for each subdirectory in `.specify/changes/<name>/specs/`, record an entry with `name` (the directory name) and `type` (`new` if no baseline exists at `.specify/specs/<name>/spec.md`, `modified` if one does)
 
    Summarize:
    - Change name and location

@@ -2,9 +2,6 @@
 name: review
 description: Validate artifacts with structured checks and cross-artifact consistency. Sets status to reviewed when all checks pass. Use when the user wants to verify artifact quality before implementation.
 license: MIT
-metadata:
-  author: specify
-  version: "1.0"
 ---
 
 # Review
