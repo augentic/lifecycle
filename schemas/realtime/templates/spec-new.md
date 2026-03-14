@@ -1,15 +1,15 @@
 # Realtime New Spec Template
 
-Use this template for capabilities listed under **New Capabilities** in the
+Use this template for crates listed under **New Crates** in the
 proposal. This format matches what code-analyzer produces, and is what
 crate-writer and test-writer expect as input.
 
 ```markdown
-# <Capability Name> Specification
+# <Crate Name> Specification
 
 ## Purpose
 
-<1-2 sentence description of what this capability does>
+<1-2 sentence description of what this crate does>
 
 ### Requirement: <Behavior Name>
 
@@ -36,4 +36,4 @@ The system SHALL <behavioral description>.
 - `<metric_name>` — type: <counter|gauge|histogram>; emitted: <when>
 ```
 
-Repeat `### Requirement:` blocks for each distinct behavior in the capability, incrementing the `ID: REQ-XXX` line for each new requirement.
+Repeat `### Requirement:` blocks for each distinct behavior in the crate, incrementing the `ID: REQ-XXX` line for each new requirement.

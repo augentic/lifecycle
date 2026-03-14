@@ -19,7 +19,7 @@ Optionally specify a capability name to verify. If omitted, verify all capabilit
    Verify `.specify/config.yaml` exists. If not:
    > "Specify is not initialized in this project. Run `/spec:init` to get started."
 
-   Read `.specify/config.yaml` for the `schema` value and **resolve the schema** using the **Schema Resolution** procedure (`references/schema-resolution.md`). Files needed: `schema.yaml`. Read `schema.yaml` for `spec-format` heading conventions and terminology.
+   Read `.specify/config.yaml` for the `schema` value and **resolve the schema** using the **Schema Resolution** procedure (`references/schema-resolution.md`). Files needed: `schema.yaml`. Read `schema.yaml` for `spec-format` heading conventions and `terminology.unit` (infer plural and heading forms from the unit name).
 
 2. **Locate baseline specs**
 

@@ -10,7 +10,7 @@ Create full design if any of the following apply:
 If none of the above apply, create a minimal design.md noting that a full
 design is not warranted and referencing the proposal and specs:
 
-Structure the document with capability-specific sections if multiple capabilities are involved.
+Structure the document with crate-specific sections if multiple crates are involved.
 
 Required sections (see template):
   - **Context**: Source, purpose, background, and current state

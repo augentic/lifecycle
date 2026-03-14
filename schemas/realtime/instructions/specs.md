@@ -25,17 +25,17 @@ First, read the proposal's **Source** section to determine the workflow:
 
 **Manual path** (Source is "Manual" or absent):
 
-  Create one spec file per capability listed in the proposal's
-  Capabilities section. Choose the right template based on the proposal:
+  Create one spec file per crate listed in the proposal's
+  Crates section. Choose the right template based on the proposal:
 
-  **New Capabilities**: use the **New Capability** template from the
+  **New Crates**: use the **New Crate** template from the
   resolved schema's `templates/spec-new.md`. Use the exact kebab-case
-  name from the proposal (`specs/<capability>/spec.md`).
+  name from the proposal (`specs/<crate>/spec.md`).
 
-  New capability guidelines:
+  New crate guidelines:
 
   Structure the spec as a flat baseline document:
-    - `## Purpose` — what the capability does overall
+    - `## Purpose` — what the crate does overall
     - `### Requirement: <name>` — one block per behavioral requirement
     - `ID: REQ-XXX` — stable identifier immediately after each requirement heading
     - `#### Scenario: <name>` — one or more scenarios under each requirement
@@ -49,10 +49,10 @@ First, read the proposal's **Source** section to determine the workflow:
     - Every requirement MUST have at least one scenario
     - Specs should be testable — each scenario is a potential test case
 
-  **Modified Capabilities**: use the **Modified Capability** template
+  **Modified Crates**: use the **Modified Crate** template
   from the resolved schema's `templates/spec-delta.md`. Use the existing
-  spec folder name from `.specify/specs/<capability>/` when creating
-  the delta spec at `specs/<capability>/spec.md`.
+  spec folder name from `.specify/specs/<crate>/` when creating
+  the delta spec at `specs/<crate>/spec.md`.
 
   Delta operations use the headings defined in `schema.yaml`'s
   `spec-format.delta-operations`:
@@ -72,7 +72,7 @@ First, read the proposal's **Source** section to determine the workflow:
 
   MODIFIED requirements workflow:
     1. Locate the existing requirement in
-      `.specify/specs/<capability>/spec.md`
+      `.specify/specs/<crate>/spec.md`
     2. Copy the ENTIRE requirement block (from `### Requirement:`
       through all scenarios), including the `ID:` line.
     3. Paste under the MODIFIED heading and edit to reflect new
@@ -80,7 +80,7 @@ First, read the proposal's **Source** section to determine the workflow:
     4. Preserve the original `ID:` value exactly.
 
   ADDED requirements workflow:
-    1. Inspect `.specify/specs/<capability>/spec.md` for the highest existing requirement ID
+    1. Inspect `.specify/specs/<crate>/spec.md` for the highest existing requirement ID
     2. Assign the next sequential ID to the new requirement block
     3. Do not reuse IDs from removed requirements
 

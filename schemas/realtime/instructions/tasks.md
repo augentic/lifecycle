@@ -38,7 +38,7 @@ Available skills for Realtime:
 
 | Directive             | Skill                           | When to Use                |
 | --------------------- | ------------------------------- | -------------------------- |
-| `omnia:guest-writer`  | Generate WASM guest project     | New capability, first task |
+| `omnia:guest-writer`  | Generate WASM guest project     | New crate, first task      |
 | `omnia:crate-writer`  | Generate or update domain crate | Crate implementation tasks |
 | `omnia:test-writer`   | Generate or update test suites  | Test generation tasks      |
 | `omnia:code-reviewer` | AI code review                  | Post-implementation review |

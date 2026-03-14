@@ -1,6 +1,6 @@
 # Realtime Delta Spec Template
 
-Use this template for capabilities listed under **Modified Capabilities** in
+Use this template for crates listed under **Modified Crates** in
 the proposal. This delta format describes changes to an existing baseline spec.
 
 ```markdown

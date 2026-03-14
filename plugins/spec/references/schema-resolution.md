@@ -132,8 +132,9 @@ merges the child on top.
   is recomputed from the merged `requires` graph.
 - **`spec-format`**: child overrides parent field-by-field (e.g., child
   can override `requirement-heading` without restating `delta-operations`).
-- **`terminology`**: child replaces parent entirely. If omitted, inherits
-  the parent's `terminology` block.
+- **`terminology`**: child replaces parent. If omitted, inherits the
+  parent's `terminology`. Contains only `unit` (skills infer plural and
+  heading forms).
 - **`cross-artifact-checks`**: child replaces parent entirely. If omitted,
   inherits the parent's checks.
 - **`apply`**: child `requires` replaces parent `requires`; child

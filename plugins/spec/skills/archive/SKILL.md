@@ -25,7 +25,7 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
 
    Read `.specify/changes/<name>/.metadata.yaml` for the schema value and status. **Resolve the schema** using the **Schema Resolution** procedure (`references/schema-resolution.md`). Files needed: `schema.yaml`.
 
-   Read `schema.yaml` for artifact definitions, `spec-format` heading conventions, and terminology (e.g., "Crates" vs "Capabilities"). Use schema terminology in summary output.
+   Read `schema.yaml` for artifact definitions, `spec-format` heading conventions, and `terminology.unit` (e.g., "crate" vs "capability"). Infer plural and heading forms from the unit name. Use schema terminology in summary output.
 
 2. **Check lifecycle status**
 

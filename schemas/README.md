@@ -42,16 +42,17 @@ schemas/<name>/
 │   └── apply.md     # May be omitted in child schemas (inherited from parent)
 └── templates/       # Artifact templates
     ├── proposal.md
-    ├── spec-new.md    # Template for new crates/capabilities
-    ├── spec-delta.md  # Template for modified crates/capabilities (delta format)
+    ├── spec-new.md    # Template for new crates
+    ├── spec-delta.md  # Template for modified crates (delta format)
     ├── design.md
     └── tasks.md       # May be omitted in child schemas (inherited from parent)
 ```
 
 - **`schema.yaml`**: Declares artifacts (id, template filename, instruction
-  file path, dependencies), `terminology` (unit naming for crates vs
-  capabilities), `spec-format` conventions for flat requirement/scenario blocks,
-  stable requirement IDs, delta operations, and the `apply` configuration.
+  file path, dependencies), `terminology` (the `unit` name, e.g., "crate"
+  e.g., "crate"), `spec-format` conventions for flat requirement/scenario
+  blocks, stable requirement IDs, delta operations, and the `apply`
+  configuration.
   Child schemas may use `extends` to inherit from a parent and only override
   what differs. Skills read this to know how to generate artifacts and
   implement tasks.
@@ -62,7 +63,7 @@ schemas/<name>/
 - **`config.yaml`**: Installed into `.specify/config.yaml` by `/spec:init`.
   Contains the `schema` URL, default `context`, and per-artifact `rules`.
 - **`templates/`**: Markdown templates for each artifact. Spec templates
-  are split into `spec-new.md` (new crate/capability) and `spec-delta.md`
+  are split into `spec-new.md` (new crate) and `spec-delta.md`
   (delta format for modifications). Referenced by filename in `schema.yaml`.
 
 ## Schema Resolution
@@ -153,15 +154,15 @@ schemas. The `proposal.md` templates differ:
 
 - **Omnia**: uses "Crates" (New Crates / Modified Crates); Source supports
   Repository, Epic, and Manual.
-- **Realtime**: uses "Capabilities" (New Capabilities / Modified
-  Capabilities); Source supports Repository and Manual.
+- **Realtime**: uses "Crates" (New Crates / Modified Crates); Source
+  supports Repository and Manual.
 
 Spec templates are split per schema:
 
-- **`spec-new.md`**: Template for new crates/capabilities (baseline format
+- **`spec-new.md`**: Template for new crates (baseline format
   with top-level `### Requirement:` blocks, `ID: REQ-XXX` lines, and
   `#### Scenario:` entries).
-- **`spec-delta.md`**: Template for modified crates/capabilities (delta
+- **`spec-delta.md`**: Template for modified crates (delta
   format with ADDED/MODIFIED/REMOVED/RENAMED sections keyed by stable
   requirement IDs).
 

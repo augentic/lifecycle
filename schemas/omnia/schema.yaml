@@ -4,8 +4,6 @@ description: Omnia workflow
 
 terminology:
   unit: crate
-  unit-plural: crates
-  unit-heading: Crates
 
 spec-format:
   requirement-heading: "### Requirement:"
