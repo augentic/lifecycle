@@ -1,17 +1,12 @@
 name: realtime
 version: 1
 description: Realtime workflow
+extends: https://github.com/augentic/specify/schemas/omnia
 
-spec_format:
-  requirement_heading: "### Requirement:"
-  requirement_id_prefix: "ID:"
-  requirement_id_pattern: "^REQ-[0-9]{3}$"
-  scenario_heading: "#### Scenario:"
-  delta_operations:
-    added: "## ADDED Requirements"
-    modified: "## MODIFIED Requirements"
-    removed: "## REMOVED Requirements"
-    renamed: "## RENAMED Requirements"
+terminology:
+  unit: capability
+  unit_plural: capabilities
+  unit_heading: Capabilities
 
 artifacts:
   - id: proposal
@@ -39,83 +34,6 @@ artifacts:
         scope: capability_names
         pattern: "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
 
-  - id: specs
-    generates: specs/**/*.md
-    description: Detailed specifications for the change
-    templates:
-      new: spec-new.md
-      delta: spec-delta.md
-    instruction: instructions/specs.md
-    requires:
-      - proposal
-    validate:
-      - Every requirement has at least one scenario
-      - Every requirement includes a stable ID line immediately after the heading
-      - Requirement IDs use the REQ-XXX format and stay stable when behavior is modified or renamed
-      - Uses SHALL/MUST language for normative requirements (not should/may)
-      - Requirements use the flat baseline format with top-level requirement headings
-      - Every scenario uses WHEN/THEN format
-    validate_checks:
-      - check: spec_structure
-        heading_ref: spec_format.requirement_heading
-        id_ref: spec_format.requirement_id_prefix
-        scenario_ref: spec_format.scenario_heading
-      - check: requirement_has_id
-        pattern_ref: spec_format.requirement_id_pattern
-      - check: requirement_has_scenario
-        scenario_ref: spec_format.scenario_heading
-      - check: normative_language
-        required_terms: ["SHALL", "MUST"]
-        forbidden_as_normative: ["should", "may"]
-      - check: scenario_keywords
-        required: ["WHEN", "THEN"]
-
-  - id: design
-    generates: design.md
-    description: Technical design document with implementation details
-    template: design.md
-    instruction: instructions/design.md
-    requires:
-      - proposal
-    validate:
-      - Has a Context section
-      - Has a Domain Model section (or explicitly states none needed)
-      - Has a Business Logic section (or explicitly states none needed)
-    validate_checks:
-      - check: heading_exists
-        heading: "## Context"
-        min_content_lines: 1
-      - check: heading_exists_or_waived
-        heading: "## Domain Model"
-        waiver_pattern: "[Nn]one needed|[Nn]ot applicable"
-      - check: heading_exists_or_waived
-        heading: "## Business Logic"
-        waiver_pattern: "[Nn]one needed|[Nn]ot applicable"
-
-  - id: tasks
-    generates: tasks.md
-    description: Implementation checklist with trackable tasks
-    template: tasks.md
-    instruction: instructions/tasks.md
-    requires:
-      - specs
-      - design
-    validate:
-      - Every task uses checkbox format (- [ ] X.Y description)
-      - Tasks are grouped under numbered headings
-      - At least one task exists
-    validate_checks:
-      - check: pattern_match
-        scope: task_lines
-        pattern: "^- \\[[ xX]\\] \\d+\\.\\d+ "
-      - check: heading_match
-        pattern: "^## \\d+\\."
-        min_count: 1
-      - check: min_count
-        scope: task_lines
-        pattern: "^- \\[[ xX]\\] "
-        min: 1
-
 cross_artifact_checks:
   - check: proposal_capabilities_have_specs
     description: Every capability listed in the proposal has a corresponding spec file under specs/
@@ -123,8 +41,3 @@ cross_artifact_checks:
     description: Requirement IDs (REQ-XXX) referenced in design.md exist in spec files
   - check: spec_format_valid
     description: All spec files match the heading structure defined in spec_format
-
-apply:
-  requires: [tasks]
-  tracks: tasks.md
-  instruction: instructions/apply.md

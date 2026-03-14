@@ -2,6 +2,11 @@ name: omnia
 version: 1
 description: Omnia workflow
 
+terminology:
+  unit: crate
+  unit_plural: crates
+  unit_heading: Crates
+
 spec_format:
   requirement_heading: "### Requirement:"
   requirement_id_prefix: "ID:"

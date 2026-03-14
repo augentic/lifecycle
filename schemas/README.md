@@ -18,6 +18,7 @@ schema provides artifact declarations (`schema.yaml`), artifact instructions
 ### `realtime`
 
 - **URL**: `https://github.com/augentic/specify/schemas/realtime`
+- **Extends**: `omnia` (inherits `spec_format`, `specs`/`design`/`tasks` artifacts, and `apply` config)
 - **Purpose**: Migration (TypeScript -> Rust WASM)
 - **Source**: Git Repository (`/rt:code-analyzer`) or Manual
 - **Target**: Rust WASM (Omnia SDK)
@@ -25,31 +26,35 @@ schema provides artifact declarations (`schema.yaml`), artifact instructions
 
 ## Schema Directory Structure
 
-Each schema directory contains:
+A base schema directory contains all files. A child schema that uses `extends`
+may omit files that are inherited from the parent (the resolution algorithm
+falls back to the parent directory for missing files).
 
 ```text
 schemas/<name>/
-├── schema.yaml      # Artifact declarations (id, generates, requires, template, instruction path)
+├── schema.yaml      # Artifact declarations, terminology, spec_format, apply config
 ├── config.yaml      # Starter config installed by /spec:init
 ├── instructions/    # Detailed instructions for each artifact and apply
 │   ├── proposal.md
 │   ├── specs.md
 │   ├── design.md
 │   ├── tasks.md
-│   └── apply.md
+│   └── apply.md     # May be omitted in child schemas (inherited from parent)
 └── templates/       # Artifact templates
     ├── proposal.md
     ├── spec-new.md    # Template for new crates/capabilities
     ├── spec-delta.md  # Template for modified crates/capabilities (delta format)
     ├── design.md
-    └── tasks.md
+    └── tasks.md       # May be omitted in child schemas (inherited from parent)
 ```
 
 - **`schema.yaml`**: Declares artifacts (id, template filename, instruction
-  file path, dependencies, the `spec_format` conventions for flat
-  requirement/scenario blocks, stable requirement IDs, delta operations, and the
-  `apply` configuration. Skills read this to know how to generate artifacts
-  and implement tasks.
+  file path, dependencies), `terminology` (unit naming for crates vs
+  capabilities), `spec_format` conventions for flat requirement/scenario blocks,
+  stable requirement IDs, delta operations, and the `apply` configuration.
+  Child schemas may use `extends` to inherit from a parent and only override
+  what differs. Skills read this to know how to generate artifacts and
+  implement tasks.
 - **`instructions/`**: One markdown file per artifact plus `apply.md`.
   Contains the detailed generation or implementation instructions that were
   previously inline in `schema.yaml`. Referenced by file path from

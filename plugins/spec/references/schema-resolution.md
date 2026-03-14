@@ -132,12 +132,19 @@ merges the child on top.
   is recomputed from the merged `requires` graph.
 - **`spec_format`**: child overrides parent field-by-field (e.g., child
   can override `requirement_heading` without restating `delta_operations`).
+- **`terminology`**: child replaces parent entirely. If omitted, inherits
+  the parent's `terminology` block.
+- **`cross_artifact_checks`**: child replaces parent entirely. If omitted,
+  inherits the parent's checks.
 - **`apply`**: child `requires` replaces parent `requires`; child
   `instruction` replaces parent `instruction`; child `tracks` replaces
   parent `tracks`. Omitted fields inherit from parent.
 - **`instructions/` and `templates/`**: resolve from the child schema
   directory first; fall back to the parent schema directory for any files
   not present in the child.
+- **All other top-level fields** (`name`, `version`, `description`): child
+  replaces parent. These are identity fields and should always be declared
+  in the child.
 - **Circular `extends` chains** are an error — stop and report.
 
 ### Resolution Example
