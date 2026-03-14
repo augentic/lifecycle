@@ -192,101 +192,19 @@ See [multi-handler.md](examples/multi-handler.md) for the barrel layout example.
 
 ## Handler Pattern
 
-Every handler follows this exact pattern. The request struct implements `Handler<P>` and delegates to a standalone async function.
+Every handler follows the delegation pattern: request struct implements `Handler<P>`, delegates to a standalone `async fn handle()`.
 
-```rust
-use omnia_sdk::api::{Context, Handler, Reply};
-use omnia_sdk::{Config, Error, HttpRequest, Result};
-
-async fn handle<P>(_owner: &str, request: MyRequest, provider: &P) -> Result<Reply<MyResponse>>
-where
-    P: Config + HttpRequest,
-{
-    // business logic here
-    Ok(Reply::ok(response))
-}
-
-impl<P> Handler<P> for MyRequest
-where
-    P: Config + HttpRequest,
-{
-    type Error = Error;
-    type Input = Vec<u8>;
-    type Output = MyResponse;
-
-    fn from_input(input: Vec<u8>) -> Result<Self> {
-        serde_json::from_slice(&input)
-            .context("deserializing MyRequest")
-            .map_err(Into::into)
-    }
-
-    async fn handle(self, ctx: Context<'_, P>) -> Result<Reply<MyResponse>> {
-        handle(ctx.owner, self, ctx.provider).await
-    }
-}
-```
-
-### Input Type Decision Tree
-
-| Scenario                             | `type Input`       | `from_input` pattern                                     |
-| ------------------------------------ | ------------------ | -------------------------------------------------------- |
-| Message/POST body                    | `Vec<u8>`          | `serde_json::from_slice` or `quick_xml::de::from_reader` |
-| Single path param (`GET /item/{id}`) | `String`           | `Ok(Self { id: input })`                                 |
-| Tuple path params (`GET /a/{x}/{y}`) | `(String, String)` | `Ok(Self { x: input.0, y: input.1 })`                    |
-| Query string (`GET /search?q=...`)   | `Option<String>`   | `serde_urlencoded::from_str(&input.unwrap_or_default())` |
-| Scheduled/cron (no payload)          | `()`               | `Ok(Self)`                                               |
+See [sdk-api.md](references/sdk-api.md) for the Handler trait definition, Input Type Decision Tree, and Response Types (IntoBody).
 
 **Never** use `type Input = MyRequest` -- this bypasses deserialization and is incompatible with the Omnia runtime.
-
-### Response Types
-
-HTTP response types must implement `IntoBody` (see [sdk-api.md](references/sdk-api.md) for the full API). Messaging handlers that produce no HTTP response use `type Output = ()`.
 
 ## Error Handling
 
 Domain errors use `thiserror` and convert to `omnia_sdk::Error` via `From<DomainError>`. Use error macros for one-off errors: `bad_request!("msg")`, `server_error!("msg")`, `bad_gateway!("msg")`.
 
-See [error-handling.md](references/error-handling.md) for domain error patterns, macro usage, and context chaining.
+See [error-handling.md](references/error-handling.md) for domain error patterns, macro usage, context chaining, validation placement rules, timestamp semantics, and serde conventions.
 
-### Validation Placement
-
-**Rule 1: Structural validation belongs in `from_input()`**
-
-Checks that depend ONLY on the parsed data structure:
-
-- Field presence: `if field.is_empty()`
-- Format validation: regex, email, phone number
-- Range checks on constants: `if value < MIN || value > MAX`
-- Type conversions that can fail: parsing enums, dates with fixed formats
-
-**Rule 2: Temporal/contextual validation belongs in `handle()` or a `validate()` method**
-
-Checks that compare against runtime state or time:
-
-- Timestamp freshness: `if delay_secs > MAX_DELAY`
-- Message age checks using `Utc::now()`
-- Idempotency checks (requires StateStore lookup)
-- Business rule validation (requires external API calls)
-
-**Decision flowchart**:
-
-```text
-Does the validation use Utc::now(), SystemTime, or runtime state?
-├─ YES → belongs in handle() or validate() method called from handle()
-└─ NO → can this check be done immediately after parsing?
-   ├─ YES → belongs in from_input()
-   └─ NO → belongs in handle()
-```
-
-Never use `Utc::now()` in `from_input()` -- test framework's `shift_time` cannot fix validation at parse time.
-
-### Timestamp, DST, and Serde Rules
-
-- **`received_at`** -- always `Utc::now()` (processing time), never source creation timestamp. SKILL.md > artifacts on this.
-- **DST-safe conversion** -- use `.earliest()` not `.single()` for local timezone conversion.
-- **Serde directionality** -- input-only types: `#[serde(rename(deserialize = "..."))]`; output types: `#[serde(rename_all = "camelCase")]`.
-
-See [error-handling.md](references/error-handling.md) for detailed timestamp semantics, DST patterns, and serde conventions.
+**Critical**: Never use `Utc::now()` in `from_input()` -- the test framework's `shift_time` cannot fix validation at parse time.
 
 ## Test Generation
 
