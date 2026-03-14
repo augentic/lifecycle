@@ -107,7 +107,7 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
 
    b. **If NO baseline exists** (new capability): create the `.specify/specs/<capability>/` directory.
 
-   c. **Run the merge tool**:
+   c. **Run the merge tool** (co-located at `scripts/merge-specs.py` relative to this skill):
 
       ```bash
       python3 scripts/merge-specs.py \
@@ -182,7 +182,7 @@ All artifacts complete. All tasks complete.
 - Always confirm the change before archiving
 - Warn on incomplete artifacts or tasks but don't block
 - Use `scripts/merge-specs.py` for all merge and validation operations — do not perform merges inline
-- If the merge tool is unavailable (e.g., `python3` not installed), fall back to manual merge following the algorithm in `references/delta-merge.md`
+- If the merge tool is unavailable (e.g., `python3` not installed), fall back to manual merge following the algorithm in `delta-merge.md`
 - If the merge tool reports errors, stop and ask the user before proceeding
 
-For the merge algorithm and a worked example, see `references/delta-merge.md`.
+For the merge algorithm and a worked example, see `delta-merge.md`.
