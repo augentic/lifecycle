@@ -1,4 +1,4 @@
-schema: realtime
+schema: https://github.com/augentic/specify/schemas/realtime
 
 context: |
   Tech stack: Rust, WASM (wasm32-wasip2), Omnia SDK
@@ -16,11 +16,13 @@ rules:
   specs:
     - Use WHEN/THEN format for scenarios
     - Reference existing patterns before inventing new ones
-    - Organize by handler using ## Handler: <name> sections
-    - Each handler section includes Purpose, Requirements (with scenarios),
-      Error Conditions, and Metrics
-    - For update changes use ADDED/MODIFIED/REMOVED delta operations within 
-      handler sections
+    - Organize baseline specs as flat requirement blocks using
+      ### Requirement: <name> plus ID: REQ-XXX and #### Scenario: <name>
+      entries
+    - Use an optional ## Purpose preamble plus optional ## Error Conditions
+      and ## Metrics sections for shared context
+    - For update changes use top-level ADDED/MODIFIED/REMOVED/RENAMED
+      delta-operation sections keyed by stable requirement IDs
   design:
     - Include Context section with Source field (source-code or manual)
     - Document domain model entity/type definitions with field names, types, 

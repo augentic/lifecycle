@@ -6,7 +6,7 @@ license: MIT
 
 Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
 
-**IMPORTANT: Explore mode is for thinking, not implementing.** You may read files, search code, and investigate the codebase, but you must NEVER write code or implement features. If the user asks you to implement something, remind them to exit explore mode first and create a change proposal. You MAY create Specify artifacts (proposals, designs, specs) if the user asks—that's capturing thinking, not implementing.
+**IMPORTANT: Explore mode is for thinking, not implementing.** You may read files, search code, and investigate the codebase, but you must NEVER write code or implement features. If the user asks you to implement something, remind them to exit explore mode first and create a change proposal. You MAY update existing Specify artifacts within an active change if the user asks — that's capturing thinking, not implementing. To create a new change, offer to run `/spec:propose`.
 
 **This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
 
@@ -76,12 +76,17 @@ You have full context of the Specify system. Use it naturally, don't force it.
 
 ### Check for context
 
-At the start, quickly check what exists by listing directories in `.specify/changes/` (skip `archive/`). Each subdirectory with a `.metadata.yaml` is an active change. Read `.metadata.yaml` for the schema name and creation date.
+At the start, quickly check what exists by listing directories in `.specify/changes/` (skip `archive/`). Each subdirectory with a `.metadata.yaml` is an active change. Read `.metadata.yaml` for the schema name, lifecycle `status`, and creation date.
+
+Also read `.specify/config.yaml` for the `schema` field and **resolve the schema** using the **Schema Resolution** procedure (`references/schema-resolution.md`). Files needed: `schema.yaml`.
+
+Read `schema.yaml` to understand what artifacts the schema defines, what source types are supported (Repository, Epic, Manual), and what the workflow looks like.
 
 This tells you:
 - If there are active changes
-- Their names, schemas, and status
+- Their names, schemas, lifecycle status (`proposing`, `proposed`, `applying`, `complete`), and dates
 - What the user might be working on
+- What the project workflow and artifact structure looks like
 
 ### When no change exists
 
@@ -95,10 +100,8 @@ Think freely. When insights crystallize, you might offer:
 If the user mentions a change or you detect one is relevant:
 
 1. **Read existing artifacts for context**
-   - `.specify/changes/<name>/proposal.md`
-   - `.specify/changes/<name>/specs/` (all spec files)
-   - `.specify/changes/<name>/design.md`
-   - `.specify/changes/<name>/tasks.md`
+
+   For each artifact defined in `schema.yaml`, read the file(s) at `.specify/changes/<name>/<generates>`. For glob patterns (e.g., `specs/**/*.md`), read all matching files in the directory.
 
 2. **Reference them naturally in conversation**
    - "Your design mentions using Redis, but we just realized SQLite fits better..."
@@ -106,19 +109,17 @@ If the user mentions a change or you detect one is relevant:
 
 3. **Offer to capture when decisions are made**
 
-   | Insight Type | Where to Capture |
-   |--------------|------------------|
-   | New requirement discovered | `specs/$CRATE_NAME/spec.md` |
-   | Requirement changed | `specs/$CRATE_NAME/spec.md` |
-   | Design decision made | `design.md` |
-   | Scope changed | `proposal.md` |
-   | New work identified | `tasks.md` |
-   | Assumption invalidated | Relevant artifact |
+   When decisions are made during exploration, offer to capture them in the relevant artifact of the active change. Consult the schema's artifact definitions (from `schema.yaml`) to determine which artifact is appropriate for the insight type — the `id` and `description` fields describe each artifact's purpose.
 
-   Example offers:
+   **Updating an existing change's artifacts** (allowed):
    - "That's a design decision. Capture it in design.md?"
    - "This is a new requirement. Add it to specs?"
    - "This changes scope. Update the proposal?"
+
+   **Creating a new change** (delegate to propose):
+   - "This feels like a new change. Want me to run `/spec:propose` to create one?"
+
+   Do not create change directories or `.metadata.yaml` files directly — that's the propose skill's responsibility.
 
 4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
 
@@ -270,7 +271,7 @@ But this summary is optional. Sometimes the thinking IS the value.
 
 ## Guardrails
 
-- **Don't implement** - Never write code or implement features. Creating Specify artifacts is fine, writing application code is not.
+- **Don't implement** - Never write code or implement features. Updating existing Specify artifacts is fine, writing application code is not. To create a new change, delegate to `/spec:propose`.
 - **Don't fake understanding** - If something is unclear, dig deeper
 - **Don't rush** - Discovery is thinking time, not task time
 - **Don't force structure** - Let patterns emerge naturally

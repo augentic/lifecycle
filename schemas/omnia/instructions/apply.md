@@ -1,5 +1,3 @@
-# Apply Instruction
-
 Implement the tasks in tasks.md. Do not write Rust code directly --
 delegate to the skills below.
 
@@ -9,18 +7,32 @@ Arguments (used by all skills):
 - CRATE_NAME: the spec folder name (specs/<crate>/spec.md)
 - CRATE_PATH: PROJECT_DIR/crates/CRATE_NAME
 
-Mode detection -- check whether CRATE_PATH/Cargo.toml exists:
+## Skill directive tags
+
+Before starting each task, check whether it contains a skill directive
+tag in the form `<!-- skill: plugin:skill-name -->`. If present, invoke
+that skill directly (e.g., `<!-- skill: omnia:crate-writer -->` means
+run `/omnia:crate-writer`). Pass the standard arguments above. Skip mode
+detection for tasks with explicit skill tags -- the tag determines which
+skill to run.
+
+If the task has no skill tag, fall back to mode detection below.
+
+## Mode detection
+
+Check whether CRATE_PATH/Cargo.toml exists:
+
 - If Cargo.toml does not exist, use create mode.
 - If Cargo.toml exists, use update mode.
 
 **Create mode** (Cargo.toml does NOT exist -- new crate):
-  1. Use the /omnia:guest-writer skill to generate the WASM guest project 
+  1. Use the /omnia:guest-writer skill to generate the WASM guest project
     (src/lib.rs, Cargo.toml, Provider). Run the skill from start to finish;
     do not implement the guest manually. Complete every step in the skill,
     and ensure the skill's verification checklist is satisfied.
 
   2. Use the /omnia:crate-writer skill to generate the domain crate
-    (types, handlers, baseline tests) from Specify artifacts. 
+    (types, handlers, baseline tests) from Specify artifacts.
     Run the skill from start to finish; do not implement the crate
     manually. Complete every step in the skill, and ensure the skill's
     verification checklist is satisfied.
@@ -64,7 +76,7 @@ Mode detection -- check whether CRATE_PATH/Cargo.toml exists:
      tests manually. Complete every step in the skill, and ensure the skill's
      verification checklist is satisfied.
      Regenerates or updates tests to match changed specs.
-     
+
   3. Verify from CRATE_PATH (repair loop -- max 3 iterations):
        a. cargo fmt --check
           If fails: run cargo fmt, then re-check.

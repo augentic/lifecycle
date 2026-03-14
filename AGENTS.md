@@ -12,6 +12,8 @@ Humans are expected to work through stock Specify:
 - `/spec:propose`
 - `/spec:apply`
 - `/spec:archive`
+- `/spec:abandon`
+- `/spec:verify` (detect drift between code and baseline specs)
 
 This repository provides specialist skills and references that support that workflow.
 

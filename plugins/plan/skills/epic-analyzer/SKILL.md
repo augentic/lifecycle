@@ -195,7 +195,7 @@ Extract:
 
 Create the `$CHANGE_DIR/` directory structure and write the proposal and spec files.
 
-**6a. Write proposal.md**
+#### 6a. Write proposal.md
 
 Write `$PROPOSAL_PATH` from the JIRA epic data:
 
@@ -219,46 +219,47 @@ Write `$PROPOSAL_PATH` from the JIRA epic data:
 - Affected services, APIs, dependencies (from technical documentation in Steps 3.5-3.6)
 ```
 
-**6b. Write spec files**
+#### 6b. Write spec files
 
-Write a single consolidated spec file at `$SPECS_DIR/$CRATE_NAME/spec.md` with a `## Handler: <capability>` section for each user story or logical capability, following the [Deriving Specs From JIRA](references/specify.md#deriving-specs-from-jira-epic-analyzer) format:
+Write a single consolidated spec file at `$SPECS_DIR/$CRATE_NAME/spec.md`
+using the flat baseline format, following the [Deriving Specs From
+JIRA](references/specify.md#deriving-specs-from-jira-epic-analyzer) format:
 
 ```markdown
 # <Capability Name> Specification
 
-## Handler: <capability>
-
-### Purpose
+## Purpose
 
 <1-2 sentence description from user story summary>
 
-### Requirements
+### Requirement: <Behavior Name>
 
-#### Requirement: <Behavior Name>
+ID: REQ-001
 
 The system SHALL <behavioral description from acceptance criterion>.
 Source: JIRA $STORY_KEY, Criterion $N
 
-##### Scenario: <Happy Path>
+#### Scenario: <Happy Path>
 
 - Given: <preconditions>
 - When: <trigger/input>
 - Then: <expected output/behavior>
 
-##### Scenario: <Error Case>
+#### Scenario: <Error Case>
 
 - Given: <preconditions>
 - When: <invalid input or error condition>
 - Then: <error response with expected status/code>
 
-### Error Conditions
+## Error Conditions
 
 - <error type>: <description, HTTP status, and conditions>
 ```
 
 Each spec contains:
+
 - **Purpose** — from user story summary
-- **Requirements** — from acceptance criteria (each criterion becomes a requirement with Given/When/Then scenarios)
+- **Requirements** — from acceptance criteria (each criterion becomes a top-level requirement with a stable `ID: REQ-XXX` line and Given/When/Then scenarios)
 - **Error Conditions** — from acceptance criteria and BDD scenarios describing error paths
 - **Source traceability** — every requirement linked to its JIRA issue key
 
@@ -293,7 +294,7 @@ Write `$DESIGN_PATH` directly from the JIRA data gathered in Steps 1-5, followin
 Read back the artifacts in `$CHANGE_DIR/` and verify:
 
 1. `$PROPOSAL_PATH` exists with Why, What Changes, Capabilities, and Impact sections
-2. Spec file exists at `$SPECS_DIR/$CRATE_NAME/spec.md` with `## Handler:` sections
+2. Spec file exists at `$SPECS_DIR/$CRATE_NAME/spec.md` with flat `### Requirement:` blocks and stable `ID: REQ-XXX` lines
 3. Each spec has Purpose, Requirements with Given/When/Then scenarios, and Source traceability to JIRA
 4. `$DESIGN_PATH` exists with Domain Model, API Contracts, Business Logic, and External Services
 5. All artifacts follow the format specified in [specify.md](references/specify.md)
@@ -381,7 +382,7 @@ Before completing, verify:
 - [ ] Technical documentation sections extracted from descriptions
 - [ ] Attachments fetched (if MCP supports it)
 - [ ] `$PROPOSAL_PATH` written with Why, What Changes, Capabilities, Impact
-- [ ] Spec file written to `$SPECS_DIR/$CRATE_NAME/spec.md` with `## Handler:` sections, Requirements, and BDD Scenarios
+- [ ] Spec file written to `$SPECS_DIR/$CRATE_NAME/spec.md` with flat `### Requirement:` blocks, stable `ID: REQ-XXX` lines, Requirements, and BDD Scenarios
 - [ ] Each spec has Source traceability to JIRA issue keys
 - [ ] `$DESIGN_PATH` written with Domain Model, API Contracts, Business Logic, External Services
 - [ ] All unknowns explicitly marked

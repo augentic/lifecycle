@@ -19,37 +19,38 @@ Implement tasks from a Specify change.
 
    Always announce: "Using change: <name>" and how to override (e.g., `/spec:apply <other>`).
 
-2. **Check artifact completion**
-
-   Verify all required artifacts exist by checking file presence:
-
-   | Artifact | Complete when |
-   |----------|---------------|
-   | proposal | `.specify/changes/<name>/proposal.md` exists |
-   | specs | `.specify/changes/<name>/specs/` contains at least one `.md` file (in any subdirectory) |
-   | design | `.specify/changes/<name>/design.md` exists |
-   | tasks | `.specify/changes/<name>/tasks.md` exists |
-
-   **Handle states:**
-   - If `tasks.md` does not exist (apply is blocked): show message listing missing artifacts, suggest using `/spec:propose` to create them
-   - If all tasks are already complete: congratulate, suggest `/spec:archive`
-   - Otherwise: proceed to implementation
-
-3. **Read project config**
+2. **Read project config and resolve schema**
 
    Read `.specify/config.yaml` for project context. Use `context` and `rules` as constraints guiding your implementation -- do not copy them into code comments.
 
-4. **Read context files**
+   Read `.specify/changes/<name>/.metadata.yaml` for the schema value and status.
 
-   Read the artifacts for the change:
-   - `.specify/changes/<name>/proposal.md`
-   - `.specify/changes/<name>/specs/` (all spec files)
-   - `.specify/changes/<name>/design.md`
-   - `.specify/changes/<name>/tasks.md`
+   **Resolve the schema** using the **Schema Resolution** procedure (`references/schema-resolution.md`). Files needed: `schema.yaml`, `instructions/apply.md`. Read `schema.yaml` from the resolved location.
 
-5. **Show current progress**
+3. **Check lifecycle status**
 
-   Count tasks in `tasks.md`:
+   Read `status` from `.metadata.yaml`:
+   - If `status` is `proposing`: warn that artifacts may be incomplete — some may not have been generated yet. Suggest running `/spec:propose` to complete them.
+   - If `status` is `complete`: congratulate, all tasks already done. Suggest `/spec:archive`.
+   - Otherwise: proceed.
+
+4. **Check artifact completion**
+
+   For each artifact defined in `schema.yaml`, check whether it is complete:
+   - If `generates` is a simple filename (e.g., `proposal.md`), check if `.specify/changes/<name>/<generates>` exists.
+   - If `generates` is a glob pattern (e.g., `specs/**/*.md`), check if the directory contains at least one matching `.md` file.
+
+   **Handle states:**
+   - If any artifact listed in `apply.requires` (from `schema.yaml`) is incomplete: show message listing missing artifacts, suggest using `/spec:propose` to create them
+   - Otherwise: proceed to implementation
+
+5. **Read context files**
+
+   Read all artifacts for the change. For each artifact defined in `schema.yaml`, read the file(s) at `.specify/changes/<name>/<generates>`. For glob patterns (e.g., `specs/**/*.md`), read all matching files in the directory.
+
+6. **Show current progress**
+
+   Read the file tracked by `apply.tracks` (from `schema.yaml`) and count:
    - `- [ ] ` lines = incomplete tasks
    - `- [x] ` or `- [X] ` lines = complete tasks
 
@@ -57,16 +58,23 @@ Implement tasks from a Specify change.
    - Progress: "N/M tasks complete"
    - Remaining tasks overview
 
-6. **Implement tasks (loop until done or blocked)**
+   If all tasks are already complete: congratulate, suggest `/spec:archive`.
 
-   Apply instruction (from schema):
+7. **Update lifecycle status**
 
-   Read `references/apply.md` for the detailed implementation steps, including:
-   - Arguments used by skills
-   - Mode detection (Create vs Update)
-   - Step-by-step execution for each mode
+   If `status` in `.metadata.yaml` is `proposed` or `reviewed` (first time applying):
+   - Update `status` to `applying`
+   - Set `apply_started_at` to current ISO-8601 timestamp
+
+8. **Implement tasks (loop until done or blocked)**
+
+   Read the apply instruction file from the resolved schema directory (the file path is given by `apply.instruction` in `schema.yaml`).
+
+   **Skill directive tags**: Before starting each task, check whether it contains an HTML comment tag in the form `<!-- skill: plugin:skill-name -->`. If present, invoke that skill directly instead of following the default mode-detection logic. For example, a task tagged `<!-- skill: omnia:crate-writer -->` should be handled by running `/omnia:crate-writer` with the standard arguments. Tasks without a skill tag follow the instruction file's mode detection and step-by-step execution as before.
 
    For each pending task:
+   - Check for a skill directive tag and invoke the named skill if present
+   - Otherwise follow the instruction file (arguments, mode detection, step-by-step execution)
    - Show which task is being worked on
    - Make the code changes required
    - Keep changes minimal and focused
@@ -75,11 +83,14 @@ Implement tasks from a Specify change.
 
    **Pause if:**
    - Task is unclear -> ask for clarification
-   - Implementation reveals a design issue -> suggest updating artifacts
+   - Implementation reveals a design issue -> suggest updating artifacts (use `/spec:propose <name> <artifact-id>` to regenerate)
    - Error or blocker encountered -> report and wait for guidance
    - User interrupts
 
-7. **On completion or pause, show status**
+9. **On completion or pause, show status**
+
+   If all tasks are complete:
+   - Update `.metadata.yaml`: set `status` to `complete`, set `completed_at` to current ISO-8601 timestamp
 
    Display:
    - Tasks completed this session

@@ -1,6 +1,6 @@
 # Specify Guidance Supplement
 
-This repository uses stock Specify as the executable workflow contract. This document is a repository-specific supplement describing how Augentic specialists use `proposal.md`, `spec.md`, `design.md`, and `tasks.md` during `/spec:propose -> /spec:apply -> /spec:archive`.
+This repository uses stock Specify as the executable workflow contract. This document is a repository-specific supplement describing how Augentic specialists use `proposal.md`, `spec.md`, `design.md`, and `tasks.md` during `/spec:propose -> /spec:apply -> /spec:archive`, with `/spec:abandon` available when a change should be discarded instead of promoted and `/spec:verify` available to detect drift between code and baseline specs.
 
 ## Overview
 
@@ -21,12 +21,15 @@ Artifacts move through the normal Specify lifecycle:
 
 1. `.specify/changes/<change>/` holds the working change.
 2. `.specify/specs/` holds the promoted baseline specs.
-3. `.specify/changes/archive/` holds archived completed changes.
+3. `.specify/changes/archive/` holds finalized changes, including archived and abandoned changes.
 
 The human workflow is:
 
 ```text
-/spec:propose -> /spec:apply -> /spec:archive
+/spec:propose -> /spec:review (optional) -> /spec:apply -> /spec:archive
+/spec:propose -> /spec:abandon
+/spec:apply   -> /spec:abandon
+/spec:verify  (anytime -- compare code against baseline specs)
 ```
 
 ## Artifact Locations
@@ -49,59 +52,59 @@ Specs are behavioral. They should not encode Omnia trait bindings, WASM implemen
 
 ### Spec File Format (Baseline / New Crate)
 
-New crate specs and promoted baselines use the `## Handler:` format. This
-is the format that downstream skills (crate-writer, test-writer) expect.
-code-analyzer and epic-analyzer also produce this format.
+New crate specs and promoted baselines use a flat requirement format. The
+schema's `spec_format` defines the requirement, scenario, and delta-operation
+headings used by all downstream skills.
 
 ```markdown
 # <Crate Name> Specification
 
-## Handler: <handler-name>
+## Purpose
 
-### Purpose
+<1-2 sentence description of what this crate or capability does>
 
-<1-2 sentence description of what this handler or capability does>
+### Requirement: <Behavior Name>
 
-### Requirements
-
-#### Requirement: <Behavior Name>
+ID: REQ-001
 
 The system SHALL <behavioral description>.
 Source: <source function, JIRA story, or design section>
 
-##### Scenario: <Happy Path>
+#### Scenario: <Happy Path>
 
 - **WHEN** <trigger or input>
 - **THEN** <expected behavior>
 
-##### Scenario: <Error Case>
+#### Scenario: <Error Case>
 
 - **WHEN** <invalid input or failing condition>
 - **THEN** <expected error behavior>
 
-### Error Conditions
+## Error Conditions
 
 - <error type>: <description and trigger conditions>
 
-### Metrics
+## Metrics
 
 - `<metric_name>` — type: <counter|gauge|histogram>; emitted: <when>
 ```
 
 ### Delta Spec Format (Modified Crate)
 
-When modifying an existing crate, delta specs use operation headers
-(`## ADDED Requirements`, `## MODIFIED Requirements`, etc.) with
-`### Requirement:` and `#### Scenario:` at shallower heading depth.
-See the spec artifact reference for details on delta operations and
-the archive skill for how deltas merge into the baseline.
+When modifying an existing crate, delta specs use the operation headers
+defined in the schema's `spec_format.delta_operations` (default:
+`## ADDED Requirements`, `## MODIFIED Requirements`, etc.). Requirement
+blocks still use `### Requirement:` and `#### Scenario:` headings, but the
+stable merge key is the `ID: REQ-XXX` line rather than the display name.
+See the schema's `templates/spec-delta.md` for the template and the
+archive skill for how deltas merge into the baseline.
 
 ### Deriving Specs From Source Code (code-analyzer)
 
 Create a consolidated spec file from the source behavior:
 
 1. Purpose from the role of the handler or function.
-2. Requirements from distinct business rules.
+2. Requirements from distinct business rules, assigning stable IDs in spec order (`REQ-001`, `REQ-002`, ...).
 3. Scenarios from happy paths, edge cases, and failures.
 4. Error conditions from observed failure behavior.
 5. Metrics only when they are explicit in the source.
@@ -111,14 +114,14 @@ Create a consolidated spec file from the source behavior:
 Create or update spec files from user stories and acceptance criteria:
 
 1. Purpose from story summaries.
-2. Requirements from acceptance criteria.
+2. Requirements from acceptance criteria, assigning stable IDs in spec order (`REQ-001`, `REQ-002`, ...).
 3. Scenarios from BDD or equivalent examples.
 4. Error conditions from explicit failure or validation requirements.
-5. Traceability back to JIRA stories or criteria.
+5. Traceability back to JIRA stories or criteria, with requirement IDs available for design and test references.
 
 ## Design Document (Technical "How")
 
-`design.md` carries the technical shape needed to implement the change. It may reference constraints relevant to generation, but it should not hardcode target-specific bindings as part of the behavioral contract.
+`design.md` carries the technical shape needed to implement the change. It may reference constraints relevant to generation, but it should not hardcode target-specific bindings as part of the behavioral contract. When design sections refer to behavior from specs, cite the stable requirement IDs (for example, `REQ-003`) rather than relying on requirement titles staying unchanged.
 
 ### Design Document Format
 
@@ -220,6 +223,18 @@ Use `tasks.md` as an implementation checklist, not as another requirements or de
 
 Tasks should describe sequencing, checkpoints, and ownership. They should not introduce new behavioral requirements.
 
+### Skill Directive Tags
+
+Tasks may optionally include a skill directive as an HTML comment. The apply phase parses these tags and delegates the task to the named specialist skill instead of following the default apply instruction.
+
+```markdown
+- [ ] 2.1 Generate the domain crate <!-- skill: omnia:crate-writer -->
+- [ ] 2.2 Generate test suites <!-- skill: omnia:test-writer -->
+- [ ] 2.3 Manual integration step
+```
+
+Tasks without a skill tag are implemented via the schema's default apply instruction (mode detection, verification loop, etc.). Use skill tags when a task maps directly to a single specialist skill invocation.
+
 ## Tags Reference
 
 Tags are used in `design.md` business logic blocks.
@@ -247,9 +262,9 @@ Use explicit unknown markers instead of guessing.
 ### Behavioral Specs
 
 - [ ] One spec file per capability or crate
-- [ ] Each spec has Purpose, Requirements, Scenarios, and Error Conditions
+- [ ] Each spec has Purpose, flat Requirement blocks, stable `ID: REQ-XXX` lines, Scenarios, and Error Conditions
 - [ ] Specs stay behavioral and avoid platform-binding detail
-- [ ] Traceability is present for each requirement
+- [ ] Traceability is present for each requirement and can refer to its stable ID
 
 ### Technical Design
 

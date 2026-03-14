@@ -1,72 +1,3 @@
-# Artifact: Design
-
-**Write to**: `.specify/changes/<name>/design.md`
-
-## Template
-
-```markdown
-<!--
-For multi-crate changes, structure the document with crate-specific sections:
-
-## Crate: <crate-name>
-
-### Domain Model
-...
-### Business Logic
-...
--->
-
-## Context
-
-<!-- Source, purpose, and background for this change -->
-
-## Domain Model
-
-<!-- Entity and type definitions with field names, types, wire names, and optionality -->
-
-## API Contracts
-
-<!-- Endpoints with method, path, request/response shapes, errors -->
-
-## External Services
-
-<!-- Name, type (API, table store, cache, message broker), authentication -->
-
-## Constants & Configuration
-
-<!-- All config keys with descriptions and defaults -->
-
-## Business Logic
-
-<!-- Per-handler tagged pseudocode ([domain], [infrastructure], [mechanical]) -->
-
-## Publication & Timing Patterns
-
-<!-- Topics, message shapes, timing, partition keys -->
-
-## Implementation Constraints
-
-<!-- Platform or runtime constraints relevant to generation -->
-
-## Source Capabilities Summary
-
-<!-- Checklist of required provider traits -->
-
-## Dependencies
-
-<!-- External packages or services this change depends on -->
-
-## Risks / Open Questions
-
-<!-- Known risks, trade-offs, and unresolved decisions -->
-
-## Notes
-
-<!-- Additional observations or considerations -->
-```
-
-## Instruction
-
 Create the design document to explain HOW to implement the change.
 
 Create full design if any of the following apply:
@@ -79,7 +10,7 @@ Create full design if any of the following apply:
 If none of the above apply, create a minimal design.md noting that a full
 design is not warranted and referencing the proposal and specs:
 
-Structure the document with crate-specific sections if multiple crates are involved.
+Structure the document with capability-specific sections if multiple capabilities are involved.
 
 Required sections (see template):
   - **Context**: Source, purpose, background, and current state
