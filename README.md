@@ -1,6 +1,6 @@
 # Specify
 
-Specify is a plugin system for [Cursor](https://cursor.com) that orchestrates spec-driven software development, providing specialist skills for structured proposal-to-implementation workflows.
+Specify is a plugin system to orchestrate spec-driven software development. This repository provides the specialist skills used to power structured proposal-to-implementation workflows.
 
 Each change flows through a defined lifecycle — propose, implement, archive — with artifact validation built into the implementation step. All artifacts are version-controlled alongside your code.
 
