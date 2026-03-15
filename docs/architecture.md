@@ -6,6 +6,9 @@ specify/
 │   └── rules/                    # Project guidance for agents
 ├── .cursor-plugin/
 │   └── marketplace.json          # Multi-plugin marketplace manifest
+├── docs/                         # Extended documentation
+│   ├── architecture.md           # Repository structure reference
+│   └── plugins.md                # Full plugin and skill reference
 ├── plugins/
 │   ├── references/               # Shared references (specify.md, agent-teams.md)
 │   ├── spec/                     # Specify workflow plugin
@@ -25,7 +28,10 @@ specify/
 ├── schemas/                      # Schema definitions (omnia, realtime)
 │   ├── omnia/                    # Greenfield Rust WASM schema
 │   └── realtime/                 # TypeScript migration schema (extends omnia)
-└── scripts/                      # Documentation and consistency checks
+└── scripts/                      # Validation and plugin management
+    ├── checks.sh                 # Documentation and consistency checks
+    ├── dev-plugins.sh            # Symlink local plugins for development
+    └── prod-plugins.sh           # Restore marketplace plugins
 ```
 
 ## Artifact Boundaries
