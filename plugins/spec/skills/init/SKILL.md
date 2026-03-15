@@ -77,7 +77,21 @@ I'll create the `.specify/` directory structure and install a starter `config.ya
    Write a thin project config to `.specify/config.yaml` with:
    - `schema`: set to `$SCHEMA` (the resolved schema value — bare name or URL)
    - `context`: set to the user's description if provided, otherwise a placeholder comment (`# Describe your project here`)
-   - `rules: {}` (empty — schema defaults from `.specify/.cache/config.yaml` apply automatically)
+   - `rules`: scaffold one key per artifact defined in the resolved `schema.yaml` (read `artifacts[].id`). Each key is a YAML block scalar (`|`) containing a placeholder comment. For example, with the omnia schema the output is:
+
+     ```yaml
+     rules:
+       proposal: |
+         # TODO: Add any proposal override rules here
+       specs: |
+         # TODO: Add any specs override rules here
+       design: |
+         # TODO: Add any design override rules here
+       tasks: |
+         # TODO: Add any tasks override rules here
+     ```
+
+     These are overrides only — schema defaults from `.specify/.cache/config.yaml` still apply for any key left as a placeholder.
 
    Do NOT copy the schema's `config.yaml` wholesale. The project config is a thin overlay; schema defaults live in the cache.
 
@@ -88,7 +102,7 @@ I'll create the `.specify/` directory structure and install a starter `config.ya
    Tell the user:
    - "Specify initialized. Config written to `.specify/config.yaml`."
    - "Edit the `context` field to describe your project's tech stack, architecture, and testing approach."
-   - "Add entries under `rules` to override schema defaults for specific artifacts. To see the defaults, check `.specify/.cache/config.yaml`."
+   - "Fill in the scaffolded `rules` entries to override schema defaults for specific artifacts. To see the defaults, check `.specify/.cache/config.yaml`."
    - "When ready, run `/spec:propose` to start your first change."
 
 **Output**
@@ -108,6 +122,6 @@ Next steps:
 
 **Guardrails**
 - Do not overwrite an existing config without user confirmation
-- Write a thin project config with `schema`, `context`, and `rules` only — schema defaults live in `.specify/.cache/config.yaml`
+- Write a thin project config with `schema`, `context`, and scaffolded `rules` keys (one per schema artifact) — schema defaults live in `.specify/.cache/config.yaml`
 - Populate `.specify/.cache/` with the full schema so downstream skills resolve from cache
 - If schema resolution fails, stop and report the error rather than creating a config with unknown schema content
