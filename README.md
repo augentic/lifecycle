@@ -175,15 +175,16 @@ This executes `./scripts/checks.sh`, which requires `python3` and `bash`.
 To test plugins locally before releasing to the marketplace (preserves namespacing and interdependencies such as `/spec:apply` → `/omnia:crate-writer`):
 
 ```bash
-./scripts/install-plugins.sh
+make dev-plugins
 ```
 
+To revert to Augentic marketplace plugins:
 
-#### Marketplace vs Local
+```bash
+make prod-plugins
+```
 
-If the Augentic marketplace plugins are installed, the `install-plugins.sh` script automatically disables them (sets `enabledPlugins[spec@augentic] = false`, etc.) so only the `@local` versions load. No manual step needed.
-
-To do it manually: Settings → Plugins → disable the marketplace versions of spec, omnia, rt, plan.
+**N.B.**: Reload (or restart) Cursor to pick up the changes for both dev and prod plugins.
 
 ### Contributing
 
