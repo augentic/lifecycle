@@ -133,8 +133,8 @@ merges the child on top.
   entirely; new `id`s are appended to the parent's list. Dependency order
   is recomputed from the merged `requires` graph.
 - **`terminology`**: child replaces parent. If omitted, inherits the
-  parent's `terminology`. Contains only `unit` (skills infer plural and
-  heading forms).
+  parent's `terminology`. Contains only `deliverable` (skills infer plural
+  and heading forms).
 - **`validation`**: child replaces parent entirely (boolean flag map).
   If omitted, inherits the parent's validation flags.
 - **`build`**: child `requires` replaces parent `requires`; child
@@ -194,7 +194,7 @@ across machines and branches.
 | init    | `schema.yaml`, `config.yaml`, `instructions/*`        |
 | define  | `schema.yaml`, `config.yaml`, `instructions/*`        |
 | build   | `schema.yaml`, `config.yaml`, `instructions/build.md` |
-| promote | `schema.yaml`                                         |
+| merge   | `schema.yaml`                                         |
 | drop    | `schema.yaml`                                         |
 | verify  | `schema.yaml`                                         |
 | explore | `schema.yaml`                                         |

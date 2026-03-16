@@ -1,5 +1,5 @@
 ---
-description: Specify plugin context -- Specify workflow orchestration for defining, building, promoting, dropping, and exploring changes
+description: Specify plugin context -- Specify workflow orchestration for defining, building, merging, dropping, and exploring changes
 alwaysApply: true
 ---
 
@@ -7,9 +7,9 @@ alwaysApply: true
 
 ## Overview
 
-This plugin provides the core Specify workflow skills: define a change, build (validate and implement) a change, promote a completed change, drop a discarded change, verify code-to-spec consistency, explore ideas or problems interactively, check status, and initialize new projects. These skills orchestrate the human-driven Specify lifecycle that the specialist plugins (Omnia, RT, Plan) build on.
+This plugin provides the core Specify workflow skills: define a change, build (validate and implement) a change, merge a completed change, drop a discarded change, verify code-to-spec consistency, explore ideas or problems interactively, check status, and initialize new projects. These skills orchestrate the human-driven Specify lifecycle that the specialist plugins (Omnia, RT, Plan) build on.
 
-**Purpose**: Drive the define -> build -> promote workflow, with drop for cleanup, verify for drift detection, and explore for thinking and investigation.
+**Purpose**: Drive the define -> build -> merge workflow, with drop for cleanup, verify for drift detection, and explore for thinking and investigation.
 
 ## Plugin Architecture
 
@@ -27,7 +27,7 @@ This plugin provides the core Specify workflow skills: define a change, build (v
     ├── init/              # Initialize Specify in a project
     ├── define/            # Create a change with all artifacts (or regenerate one)
     ├── build/             # Validate artifacts and implement tasks from a change
-    ├── promote/           # Promote a completed change
+    ├── merge/             # Merge a completed change
     ├── drop/              # Discard a change without merging specs
     ├── explore/           # Thinking partner for ideas and investigation
     ├── verify/            # Detect drift between code and baseline specs
@@ -54,7 +54,7 @@ schemas/<name>/
 Changes track their status in `.metadata.yaml`:
 
 ```text
-defining -> defined -> building -> complete -> promoted
+defining -> defined -> building -> complete -> merged
     \          \          \
      `-------> `-------> `-------> dropped
 ```
@@ -62,8 +62,8 @@ defining -> defined -> building -> complete -> promoted
 - **defining**: Artifacts are being generated (define in progress)
 - **defined**: All artifacts created, ready for implementation
 - **building**: Tasks are being implemented (artifacts validated on entry)
-- **complete**: All tasks done, ready to promote
-- **promoted**: Specs merged into baseline, change moved to archive
+- **complete**: All tasks done, ready to merge
+- **merged**: Specs merged into baseline, change moved to archive
 - **dropped**: Change moved to archive without merging specs into the baseline
 
 ## Workflow
@@ -71,23 +71,23 @@ defining -> defined -> building -> complete -> promoted
 ```text
 /spec:init (once per project)
 
-/spec:define  ->  /spec:build  ->  /spec:promote
+/spec:define  ->  /spec:build  ->  /spec:merge
                        ^
                        |
                   /spec:explore (anytime)
                   /spec:status  (anytime)
-                  /spec:verify  (after promote, detect drift)
-                  /spec:drop    (discard instead of promote)
+                  /spec:verify  (after merge, detect drift)
+                  /spec:drop    (discard instead of merge)
 ```
 
 - **init**: One-time project setup -- creates `.specify/` directory structure and `config.yaml`
 - **define**: Create a change directory and generate artifacts in dependency order. Supports regenerating a single artifact with `/spec:define <name> <blueprint-id>`.
 - **build**: Validate artifacts against `schema.yaml` rules and cross-blueprint consistency, then implement tasks from the change, marking them complete as you go
-- **promote**: Preview merge operations, finalize a completed change, merge delta specs into baseline
+- **merge**: Preview merge operations, finalize a completed change, merge delta specs into baseline
 - **drop**: Discard an active change, set `status: dropped`, and move it to archive without merging specs
 - **verify**: Compare current code against baseline specs to detect drift -- read-only
 - **explore**: Read-only thinking mode for investigating problems and clarifying requirements
-- **status**: Check lifecycle status, artifact completion, task progress, and active/promoted changes
+- **status**: Check lifecycle status, artifact completion, task progress, and active/merged changes
 
 ## Troubleshooting
 
@@ -113,7 +113,7 @@ defining -> defined -> building -> complete -> promoted
 - [Init SKILL.md](skills/init/SKILL.md) - Initialize Specify
 - [Define SKILL.md](skills/define/SKILL.md) - Create changes with artifacts
 - [Build SKILL.md](skills/build/SKILL.md) - Validate artifacts and implement change tasks
-- [Promote SKILL.md](skills/promote/SKILL.md) - Finalize completed changes
+- [Merge SKILL.md](skills/merge/SKILL.md) - Finalize completed changes
 - [Drop SKILL.md](skills/drop/SKILL.md) - Discard a change without merging specs
 - [Verify SKILL.md](skills/verify/SKILL.md) - Detect drift between code and baseline specs
 - [Explore SKILL.md](skills/explore/SKILL.md) - Thinking and investigation mode

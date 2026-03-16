@@ -12,7 +12,7 @@ specify/
 ├── plugins/
 │   ├── references/               # Shared references (specify.md, agent-teams.md)
 │   ├── spec/                     # Specify workflow plugin
-│   │   ├── skills/               # Workflow skills (init, define, build, promote, ...)
+│   │   ├── skills/               # Workflow skills (init, define, build, merge, ...)
 │   │   ├── references/           # Artifact templates and schema resolution
 │   │   └── mcp.json              # MCP server definition
 │   ├── omnia/                    # Omnia code generation plugin

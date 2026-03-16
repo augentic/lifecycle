@@ -1,6 +1,6 @@
 # Specify Guidance Supplement
 
-This repository uses stock Specify as the executable workflow contract. This document is a repository-specific supplement describing how Augentic specialists use `proposal.md`, `spec.md`, `design.md`, and `tasks.md` during `/spec:define -> /spec:build -> /spec:promote`, with `/spec:drop` available when a change should be discarded instead of promoted and `/spec:verify` available to detect drift between code and baseline specs. Artifact validation is performed automatically by `/spec:build` before implementation begins.
+This repository uses stock Specify as the executable workflow contract. This document is a repository-specific supplement describing how Augentic specialists use `proposal.md`, `spec.md`, `design.md`, and `tasks.md` during `/spec:define -> /spec:build -> /spec:merge`, with `/spec:drop` available when a change should be discarded instead of merged and `/spec:verify` available to detect drift between code and baseline specs. Artifact validation is performed automatically by `/spec:build` before implementation begins.
 
 ## Overview
 
@@ -20,13 +20,13 @@ Specialist skills in this repo consume those artifacts, but they should not rede
 Artifacts move through the normal Specify lifecycle:
 
 1. `.specify/changes/<change>/` holds the working change.
-2. `.specify/specs/` holds the promoted baseline specs.
-3. `.specify/changes/archive/` holds finalized changes, including promoted and dropped changes.
+2. `.specify/specs/` holds the merged baseline specs.
+3. `.specify/changes/archive/` holds finalized changes, including merged and dropped changes.
 
 The human workflow is:
 
 ```text
-/spec:define -> /spec:build -> /spec:promote
+/spec:define -> /spec:build -> /spec:merge
 /spec:define -> /spec:drop
 /spec:build  -> /spec:drop
 /spec:verify (anytime -- compare code against baseline specs)
@@ -52,7 +52,7 @@ Specs are behavioral. They should not encode Omnia trait bindings, WASM implemen
 
 ### Spec File Format (Baseline / New Crate)
 
-New crate specs and promoted baselines use a flat requirement format. The
+New crate specs and merged baselines use a flat requirement format. The
 hard-coded spec format (`plugins/spec/references/spec-format.md`) defines
 the requirement, scenario, and delta-operation headings used by all
 downstream skills.
@@ -99,7 +99,7 @@ defined in the spec format (`## ADDED Requirements`,
 blocks still use `### Requirement:` and `#### Scenario:` headings, but the
 stable merge key is the `ID: REQ-XXX` line rather than the display name.
 See the schema's `instructions/specs.md` for the full delta structure and the
-promote skill for how deltas merge into the baseline.
+merge skill for how deltas merge into the baseline.
 
 ### Deriving Specs From Source Code (code-analyzer)
 
@@ -159,6 +159,21 @@ Create or update spec files from user stories and acceptance criteria:
 ## Notes
 ````
 
+### When To Create A Full Design
+
+Create a full design if any of the following apply:
+
+- Cross-cutting change (multiple services/modules) or new architectural pattern
+- New external dependency or significant data model changes
+- Security, performance, or migration complexity
+- Ambiguity that benefits from technical decisions before coding
+
+If none apply, create a minimal design.md noting that a full design is not warranted and referencing the proposal and specs.
+
+For multi-crate changes, structure the document with crate-specific sections (`## Crate: <crate-name>`) each containing the relevant subsections.
+
+Focus on the technical shape needed for implementation. Reference the proposal for motivation and specs for behavioral requirements. Use mermaid diagrams for entity relationships and flows.
+
 ### Design Ownership
 
 `design.md` is where Augentic-specific technical detail belongs:
@@ -174,42 +189,11 @@ Generator-owned binding decisions such as Omnia trait composition remain in spec
 
 ## Proposal Document
 
-Use `proposal.md` to capture why the change exists and what is in scope.
+Use `proposal.md` to capture why the change exists and what is in scope. The schema's instruction file (`instructions/proposal.md`) provides the full output template.
 
-The Omnia schema uses **Crates** (`New Crates` / `Modified Crates`). The
-Realtime schema uses **Crates** (`New Crates` / `Modified Crates`).
-The schema-specific proposal instruction determines which heading names
-to use. Both map to `specs/<name>/spec.md`.
+The **Crates** section creates the contract between proposal and specs phases. Each crate listed will need a corresponding spec file at `specs/<name>/spec.md`. For repository or epic sources, the analyzer discovers crates automatically.
 
-```markdown
-## Why
-
-<problem or opportunity>
-
-## Source
-
-- **Repository**: URL of the repository to migrate
-- **Epic**: JIRA/ADO/Linear epic key
-- **Manual**: Requirements described directly in this proposal
-
-## What Changes
-
-- <scoped change>
-
-## Crates (Omnia) / Capabilities (Realtime)
-
-### New Crates / New Capabilities
-
-- `name`: one-line description
-
-### Modified Crates / Modified Capabilities
-
-- `existing-name`: one-line description
-
-## Impact
-
-- affected services, APIs, dependencies, or teams
-```
+Keep proposals concise (1-2 pages). Focus on the "why" not the "how" — implementation details belong in design.md.
 
 ## Tasks Document
 
@@ -224,6 +208,17 @@ Use `tasks.md` as an implementation checklist, not as another requirements or de
 ```
 
 Tasks should describe sequencing, checkpoints, and ownership. They should not introduce new behavioral requirements.
+
+**IMPORTANT: Follow the checkbox format exactly.** The build phase parses checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
+
+Guidelines:
+
+- Group related tasks under `##` numbered headings
+- Each task MUST be a checkbox: `- [ ] X.Y Task description`
+- Tasks should be small enough to complete in one session
+- Order tasks by dependency (what must be done first?)
+- Reference specs for what needs to be built, design for how to build it
+- Each task should be verifiable — you know when it's done
 
 ### Skill Directive Tags
 

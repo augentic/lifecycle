@@ -1,7 +1,8 @@
 ---
 name: verify
-description: Compare current code against baseline specs to detect drift. Use when the user wants to check whether the codebase still matches the promoted specifications.
+description: Compare current code against baseline specs to detect drift. Use when the user wants to check whether the codebase still matches the merged specifications.
 license: MIT
+argument-hint: [capability-name?]
 ---
 
 # Verify
@@ -19,11 +20,11 @@ Optionally specify a capability name to verify. If omitted, verify all capabilit
    Verify `.specify/config.yaml` exists. If not:
    > "Specify is not initialized in this project. Run `/spec:init` to get started."
 
-   Read `.specify/config.yaml` for the `schema` value and **resolve the schema** using the **Schema Resolution** procedure (`references/schema-resolution.md`). Files needed: `schema.yaml`. Read `schema.yaml` for `terminology.unit` (infer plural and heading forms from the unit name). Read `references/spec-format.md` for heading conventions.
+   Read `.specify/config.yaml` for the `schema` value and **resolve the schema** using the **Schema Resolution** procedure (`references/schema-resolution.md`). Files needed: `schema.yaml`. Read `schema.yaml` for `terminology.deliverable` (infer plural and heading forms from the deliverable name). Read `references/spec-format.md` for heading conventions.
 
 2. **Locate baseline specs**
 
-   List directories in `.specify/specs/`. Each subdirectory with a `spec.md` file is a capability with a promoted baseline.
+   List directories in `.specify/specs/`. Each subdirectory with a `spec.md` file is a capability with a merged baseline.
 
    If no baseline specs exist:
    > "No baseline specs found under `.specify/specs/`. Nothing to verify."
@@ -43,7 +44,7 @@ Optionally specify a capability name to verify. If omitted, verify all capabilit
 
    For each capability with a source directory, analyze the source code to build a current-state requirement inventory:
 
-   a. Read the source files (`.rs`, `.ts`, `.js`, `.go`, `.py` depending on project)
+   a. Read the source files. Check the schema's `context` field (from the resolved `config.yaml`) for tech-stack hints to narrow file extensions (e.g., `.rs` for the omnia schema). Fall back to common extensions (`.rs`, `.ts`, `.js`, `.go`, `.py`) when the context does not specify a language.
    b. Identify distinct behaviors: handlers, business rules, validation logic, error handling, external calls
    c. For each identified behavior, note:
       - A brief description of what the code does

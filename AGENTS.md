@@ -11,7 +11,7 @@ Humans are expected to work through stock Specify:
 - `/spec:init` (once per project)
 - `/spec:define`
 - `/spec:build`
-- `/spec:promote`
+- `/spec:merge`
 - `/spec:drop`
 - `/spec:verify` (detect drift between code and baseline specs)
 

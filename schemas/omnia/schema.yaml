@@ -4,7 +4,7 @@ version: 1
 description: Omnia workflow
 
 terminology:
-  unit: crate
+  deliverable: crate
 
 blueprints:
   - id: proposal

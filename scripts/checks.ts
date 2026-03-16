@@ -273,12 +273,40 @@ async function checkSchemaIntegrity(): Promise<void> {
 }
 
 // ──────────────────────────────────────────────────────────────
+// 5. Symlink targets resolve
+// ──────────────────────────────────────────────────────────────
+
+async function checkSymlinks(): Promise<void> {
+  const PLUGINS_DIR = join(REPO_ROOT, "plugins");
+
+  for await (const entry of walk(PLUGINS_DIR, {
+    includeDirs: true,
+    includeFiles: false,
+  })) {
+    let info: Deno.FileInfo;
+    try {
+      info = await Deno.lstat(entry.path);
+    } catch {
+      continue;
+    }
+    if (!info.isSymlink) continue;
+
+    try {
+      await Deno.stat(entry.path);
+    } catch {
+      fail(`Broken symlink: ${relative(REPO_ROOT, entry.path)}`);
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
 // Run all checks
 // ──────────────────────────────────────────────────────────────
 
 await Promise.all([
   checkMarkdownLinks(),
   checkStaleClaims(),
+  checkSymlinks(),
 ]);
 await Promise.all([
   validateSchemaYaml(),

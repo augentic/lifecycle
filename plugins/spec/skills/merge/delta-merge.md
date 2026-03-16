@@ -1,6 +1,6 @@
 # Delta Merge
 
-This document describes the merge algorithm used when archiving a change to promote delta specs into the baseline, along with a worked example.
+This document describes the merge algorithm used when archiving a change to merge delta specs into the baseline, along with a worked example.
 
 ## Merge Algorithm
 

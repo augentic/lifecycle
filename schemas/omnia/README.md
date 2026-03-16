@@ -10,7 +10,7 @@
 
 | File | Description |
 |------|-------------|
-| `schema.yaml` | Blueprint declarations, terminology (`unit: crate`), validation flags, and build config |
+| `schema.yaml` | Blueprint declarations, terminology (`deliverable: crate`), validation flags, and build config |
 | `config.yaml` | Starter config installed by `/spec:init` with Omnia-specific context and per-blueprint rules |
 | `instructions/proposal.md` | Generation instructions for the proposal blueprint |
 | `instructions/specs.md` | Generation instructions for the specs blueprint |

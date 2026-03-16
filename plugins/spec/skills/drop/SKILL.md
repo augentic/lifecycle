@@ -1,7 +1,8 @@
 ---
 name: drop
-description: Drop a change without merging specs into the baseline. Use when the user wants to discard a change that should not be promoted normally.
+description: Drop a change without merging specs into the baseline. Use when the user wants to discard a change that should not be merged normally.
 license: MIT
+argument-hint: [change-name?]
 ---
 
 # Drop
@@ -28,8 +29,8 @@ Optionally specify a change name. If omitted, check whether it can be inferred f
 2. **Check lifecycle status**
 
    Read `status` from `.metadata.yaml`:
-   - If `status` is `complete`, warn that the change appears ready to promote normally
-   - If `status` is `promoted` or `dropped`, stop and tell the user the change is already finalized
+   - If `status` is `complete`, warn that the change appears ready to merge normally
+   - If `status` is `merged` or `dropped`, stop and tell the user the change is already finalized
    - For any other status, explain that dropping will discard the working change without promoting its specs
 
    Use the **AskQuestion tool** to confirm the user wants to drop the change.
@@ -83,5 +84,5 @@ The baseline remains unchanged.
 
 - Always confirm the change before dropping it
 - Do not merge or rewrite any files under `.specify/specs/`
-- Warn if the change is already `complete`, since `/spec:promote` may be the intended action
-- Stop if the change is already finalized as `promoted` or `dropped`
+- Warn if the change is already `complete`, since `/spec:merge` may be the intended action
+- Stop if the change is already finalized as `merged` or `dropped`
