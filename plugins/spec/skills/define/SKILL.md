@@ -2,6 +2,7 @@
 name: define
 description: Define a new change with all artifacts generated in one step. Use when the user wants to quickly describe what they want to build and get a complete proposal with design, specs, and tasks ready for implementation.
 license: MIT
+argument-hint: [description] [artifact-id?]
 ---
 
 # Define Skill
@@ -122,42 +123,20 @@ The user's request should include a change name (kebab-case) OR a description of
 
    ### Spec format conventions
 
-   These rules apply to all spec files regardless of schema. The instruction
-   file provides the templates and workflow routing; these conventions govern
-   the content written into those templates.
+   Follow the heading conventions in `references/spec-format.md` and the
+   baseline/delta format in `references/specify.md` (Spec Files section).
+   The instruction file provides the templates and workflow routing; these
+   conventions govern the content written into those templates.
 
-   **New-crate specs (baseline format):**
+   **Delta-specific workflows (modified-crate specs):**
 
-   - Structure as a flat baseline document:
-     `## Purpose` → `### Requirement:` blocks → `## Error Conditions` → `## Metrics`
-   - Assign requirement IDs sequentially within the spec (`REQ-001`, `REQ-002`, ...)
-   - Use SHALL/MUST for normative requirements (avoid should/may)
-   - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
-   - Every requirement MUST have at least one scenario
-   - Specs should be testable — each scenario is a potential test case
-
-   **Modified-crate specs (delta format):**
-
-   Delta operations use the headings defined in `references/spec-format.md`:
-   - **ADDED Requirements**: new behavior with a new `ID: REQ-XXX`
-   - **MODIFIED Requirements**: changed behavior — MUST include full updated content and preserve the existing requirement ID
-   - **REMOVED Requirements**: deprecated features — MUST include **Reason**, **Migration**, and the existing requirement ID
-   - **RENAMED Requirements**: name changes only — use `ID:` plus `TO:` format
-
-   Format rules (apply to both new and delta):
-   - Each requirement block starts with `### Requirement: <name>` followed by `ID: REQ-XXX`
-   - The `ID:` line is the stable key. Heading text is display text only.
-   - Use SHALL/MUST for normative requirements (avoid should/may)
-   - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
-   - Every requirement MUST have at least one scenario
-
-   **MODIFIED requirements workflow:**
+   MODIFIED requirements:
    1. Locate the existing requirement in `.specify/specs/<crate>/spec.md`
    2. Copy the ENTIRE requirement block (from `### Requirement:` through all scenarios), including the `ID:` line
    3. Paste under the MODIFIED heading and edit to reflect new behavior
    4. Preserve the original `ID:` value exactly
 
-   **ADDED requirements workflow:**
+   ADDED requirements:
    1. Inspect `.specify/specs/<crate>/spec.md` for the highest existing requirement ID
    2. Assign the next sequential ID to the new requirement block
    3. Do not reuse IDs from removed requirements
@@ -168,57 +147,16 @@ The user's request should include a change name (kebab-case) OR a description of
 
    ### Design writing guidance
 
-   These rules apply when generating design.md regardless of schema. The
-   instruction file provides the output template; this guidance governs
-   when and how to fill it.
-
-   Create a full design if any of the following apply:
-   - Cross-cutting change (multiple services/modules) or new architectural pattern
-   - New external dependency or significant data model changes
-   - Security, performance, or migration complexity
-   - Ambiguity that benefits from technical decisions before coding
-
-   If none apply, create a minimal design.md noting that a full design is
-   not warranted and referencing the proposal and specs.
-
-   For multi-crate changes, structure the document with crate-specific
-   sections (`## Crate: <crate-name>`) each containing the relevant
-   subsections.
-
-   Focus on the technical shape needed for implementation. Reference the
-   proposal for motivation and specs for behavioral requirements. Use
-   mermaid diagrams for entity relationships and flows.
+   Follow the design format and decision criteria in `references/specify.md`
+   (Design Document section, including "When To Create A Full Design").
+   The instruction file provides the output template.
 
    ### Task format conventions
 
-   These rules apply when generating tasks.md regardless of schema. The
-   instruction file provides the available-skills table; this guidance
-   governs the task structure.
-
-   **IMPORTANT: Follow the format below exactly.** The build phase parses
-   checkbox format to track progress. Tasks not using `- [ ]` won't be
-   tracked.
-
-   Guidelines:
-   - Group related tasks under `##` numbered headings
-   - Each task MUST be a checkbox: `- [ ] X.Y Task description`
-   - Tasks should be small enough to complete in one session
-   - Order tasks by dependency (what must be done first?)
-
-   Example:
-
-   ```markdown
-   ## 1. Setup
-   - [ ] 1.1 Create new module structure
-   - [ ] 1.2 Add dependencies to Cargo.toml
-
-   ## 2. Core Implementation
-   - [ ] 2.1 Implement data export function
-   - [ ] 2.2 Add CSV formatting utilities
-   ```
-
-   Reference specs for what needs to be built, design for how to build it.
-   Each task should be verifiable — you know when it's done.
+   Follow the task format and guidelines in `references/specify.md`
+   (Tasks Document section). The instruction file provides the
+   available-skills table per schema. The build phase parses checkbox
+   format to track progress.
 
    **Skill directives (optional):** Tasks may include an HTML comment tag
    that names a specialist skill to invoke during build. The build phase

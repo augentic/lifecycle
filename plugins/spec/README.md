@@ -18,4 +18,5 @@ Core workflow orchestration for spec-driven development: define changes, build t
 ## References
 
 - [Schema Resolution](references/schema-resolution.md)
+- [Spec Format](references/spec-format.md)
 - [Entry Point Patterns](references/entry-point-patterns.md)

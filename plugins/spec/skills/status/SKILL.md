@@ -2,6 +2,7 @@
 name: status
 description: Show the current state of Specify changes -- active changes, artifact completion, and task progress. Use when the user wants to check where they are.
 license: MIT
+argument-hint: [change-name?]
 ---
 
 # Status
@@ -68,11 +69,13 @@ Optionally specify a change name to focus on. Otherwise show an overview.
    - `defining` — "Run `/spec:define` to complete artifact generation, or `/spec:drop` to discard the change."
    - `defined` — "Run `/spec:build` to start implementing tasks, or `/spec:drop` to discard the change."
    - `building` — "Run `/spec:build` to continue implementation, or `/spec:drop` to discard the change." Show remaining task count.
-   - `complete` — "Run `/spec:merge` to finalize this change, or `/spec:drop` to discard it without merging specs."
+   - `complete` — "Run `/spec:merge` to finalize this change, or `/spec:drop` to discard it without merging specs. Consider running `/spec:verify` before merging to confirm code matches specs."
 
 7. **List archived changes** (brief)
 
    List directories in `.specify/changes/archive/` if any exist. If an archived directory contains `.metadata.yaml`, read its `status` and show whether it was `merged` or `dropped`.
+
+   If baseline specs exist at `.specify/specs/`, note: "Use `/spec:verify` at any time to detect drift between code and baseline specs."
 
 ## Output
 

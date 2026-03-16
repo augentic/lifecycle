@@ -2,6 +2,7 @@
 name: build
 description: Implement tasks from a Specify change. Use when the user wants to start implementing, continue implementation, or work through tasks.
 license: MIT
+argument-hint: [change-name?]
 ---
 
 Implement tasks from a Specify change.
@@ -65,7 +66,7 @@ Implement tasks from a Specify change.
 
    **If all checks pass**: report "Validation passed" and continue to step 7.
 
-   **If any check fails**: produce a validation summary and **halt** — do not proceed to implementation:
+   **If any check fails**: produce a validation summary and **halt** — do not proceed to implementation. The example below uses the omnia schema's validation keys; the actual keys come from the `validation` section of the resolved `schema.yaml`.
 
    ```text
    ## Validation Failed: <change-name>
