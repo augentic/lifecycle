@@ -11,15 +11,9 @@ Generate or update test suites for Omnia Rust WASM crates from Specify artifacts
 
 **Relationship to other skills**:
 
-- **crate-writer** generates baseline tests (happy path + error cases) alongside the crate. test-writer provides comprehensive test generation, spec-to-test traceability, and standalone test updates.
+- **crate-writer** generates code only (no tests). test-writer owns all test generation -- MockProvider, integration tests, spec-to-test traceability, and test updates.
 - **replay-writer** adds regression tests from captured real-world fixtures. test-writer generates synthetic tests from spec scenarios.
-
-Use test-writer when:
-
-- You need comprehensive tests beyond crate-writer's baseline coverage
-- Specs have changed and tests need updating to match
-- You want spec-to-test traceability (each BDD scenario maps to a test)
-- You want to detect drift between specs and existing tests
+- The **build orchestration layer** runs a unified verify-repair loop after both crate-writer and test-writer complete. test-writer generates tests but does not run them; compilation and test verification happen at the orchestration level.
 
 ## Arguments
 
@@ -151,19 +145,6 @@ For tests that require mock HTTP responses or complex input data:
 - Reference in MockProvider with `include_bytes!("data/<fixture>.json")`
 - Derive fixture content from design.md API response shapes and example data
 
-### Step 7: Verify
-
-```bash
-cd $CRATE_PATH && cargo test
-```
-
-All generated tests must pass. If failures occur:
-
-1. Check MockProvider trait implementations match handler bounds
-2. Verify fixture data shapes match expected API response types
-3. Confirm assertion values align with spec scenario THEN clauses
-4. Fix and re-run until all tests pass
-
 ## Test Conventions
 
 1. **Each test file** starts with `mod provider;`
@@ -215,19 +196,18 @@ This enables the spec-as-contract model: specs have teeth because tests enforce 
 
 ## Verification Checklist
 
-Before completing, verify ALL items:
+Before completing, verify ALL structural items. Compilation and test execution are verified at the orchestration level after test-writer completes.
 
 - [ ] `tests/provider.rs` with MockProvider implementing all required traits
 - [ ] At least one happy-path test for the spec file
 - [ ] Error case tests for validation failures documented in specs
 - [ ] Tests use `Client::new("owner").provider(mock)` pattern
 - [ ] Test fixtures in `tests/data/` or inline
-- [ ] `cargo test` passes
 - [ ] No `unwrap()` or `expect()` in production code (allowed in tests)
 - [ ] Each spec scenario has a corresponding test function (when specs are available)
 
 ## Related Skills
 
-- **crate-writer** -- generates crates with optional baseline tests; delegates comprehensive testing here
+- **crate-writer** -- generates crate code only; test-writer owns all test generation
 - **replay-writer** -- adds regression tests from captured real-world fixtures (complementary; test-writer generates from specs, replay-writer generates from production data)
 - **code-reviewer** -- reviews generated code including test quality
