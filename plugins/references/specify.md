@@ -1,6 +1,6 @@
 # Specify Guidance Supplement
 
-This repository uses stock Specify as the executable workflow contract. This document is a repository-specific supplement describing how Augentic specialists use `proposal.md`, `spec.md`, `design.md`, and `tasks.md` during `/spec:define -> /spec:build -> /spec:promote`, with `/spec:drop` available when a change should be discarded instead of promoted and `/spec:verify` available to detect drift between code and baseline specs. Artifact validation is performed automatically by `/spec:build` before implementation begins.
+This repository uses stock Specify as the executable workflow contract. This document is a repository-specific supplement describing how Augentic specialists use `proposal.md`, `spec.md`, `design.md`, and `tasks.md` during `/spec:define -> /spec:build -> /spec:merge`, with `/spec:drop` available when a change should be discarded instead of merged and `/spec:verify` available to detect drift between code and baseline specs. Artifact validation is performed automatically by `/spec:build` before implementation begins.
 
 ## Overview
 
@@ -20,13 +20,13 @@ Specialist skills in this repo consume those artifacts, but they should not rede
 Artifacts move through the normal Specify lifecycle:
 
 1. `.specify/changes/<change>/` holds the working change.
-2. `.specify/specs/` holds the promoted baseline specs.
-3. `.specify/changes/archive/` holds finalized changes, including promoted and dropped changes.
+2. `.specify/specs/` holds the merged baseline specs.
+3. `.specify/changes/archive/` holds finalized changes, including merged and dropped changes.
 
 The human workflow is:
 
 ```text
-/spec:define -> /spec:build -> /spec:promote
+/spec:define -> /spec:build -> /spec:merge
 /spec:define -> /spec:drop
 /spec:build  -> /spec:drop
 /spec:verify (anytime -- compare code against baseline specs)
@@ -52,7 +52,7 @@ Specs are behavioral. They should not encode Omnia trait bindings, WASM implemen
 
 ### Spec File Format (Baseline / New Crate)
 
-New crate specs and promoted baselines use a flat requirement format. The
+New crate specs and merged baselines use a flat requirement format. The
 hard-coded spec format (`plugins/spec/references/spec-format.md`) defines
 the requirement, scenario, and delta-operation headings used by all
 downstream skills.
@@ -99,7 +99,7 @@ defined in the spec format (`## ADDED Requirements`,
 blocks still use `### Requirement:` and `#### Scenario:` headings, but the
 stable merge key is the `ID: REQ-XXX` line rather than the display name.
 See the schema's `instructions/specs.md` for the full delta structure and the
-promote skill for how deltas merge into the baseline.
+merge skill for how deltas merge into the baseline.
 
 ### Deriving Specs From Source Code (code-analyzer)
 

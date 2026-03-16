@@ -26,12 +26,12 @@
     },
     "terminology": {
       "type": "object",
-      "required": ["unit"],
+      "required": ["deliverable"],
       "additionalProperties": false,
       "properties": {
-        "unit": {
+        "deliverable": {
           "type": "string",
-          "description": "Unit noun used by skills (e.g., crate). Skills infer plural and heading forms."
+          "description": "Deliverable noun used by skills (e.g., crate). Skills infer plural and heading forms."
         }
       }
     },

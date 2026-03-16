@@ -33,7 +33,7 @@ or individual files within it. Missing files are resolved from the parent schema
 via fallback.
 
 - `**schema.yaml**`: Declares blueprints (id, instructions file path,
-dependencies, validation rules), `terminology` (the `unit` name,
+dependencies, validation rules), `terminology` (the `deliverable` name,
 e.g., "crate"), and the `build` configuration.
 Child schemas may use `extends` to inherit from a parent and only override
 what differs. Skills read this to know how to generate blueprints and
@@ -58,7 +58,7 @@ Rules Override below).
 | `description` | string | yes | Human-readable description |
 | `extends` | string | no | URL of parent schema for composition (see Schema Composition) |
 | `terminology` | object | yes | Vocabulary used by skills |
-| `terminology.unit` | string | yes | Unit noun (e.g., `crate`); skills infer plural and heading forms |
+| `terminology.deliverable` | string | yes | Deliverable noun (e.g., `crate`); skills infer plural and heading forms |
 | `blueprints` | array | yes | Ordered list of blueprint declarations |
 | `validation` | object | no | Cross-blueprint boolean validation flags (keys are rule names, values are booleans) |
 | `build` | object | yes | Build-phase configuration |

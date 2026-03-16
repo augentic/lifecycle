@@ -99,7 +99,7 @@ The user's request should include a change name (kebab-case) OR a description of
 6. **Check for overlapping changes**
 
    Before creating specs, check if any other active change (in `.specify/changes/`, skipping `archive/`) also touches the same capabilities. Read each active change's `.metadata.yaml` for its `touched_specs` list. If any capability appears in both the current proposal's crates/capabilities list and another change's `touched_specs`:
-   - Warn: "The capability `<name>` is also being modified by change `<other-change>`. This may cause conflicts at promote time."
+   - Warn: "The capability `<name>` is also being modified by change `<other-change>`. This may cause conflicts at merge time."
    - This is informational only — do not block the proposal.
 
 7. **Create artifacts in dependency order**
@@ -163,7 +163,7 @@ The user's request should include a change name (kebab-case) OR a description of
    3. Do not reuse IDs from removed requirements
 
    **Common pitfalls:**
-   - Using MODIFIED with partial content loses detail at promote time
+   - Using MODIFIED with partial content loses detail at merge time
    - If adding new concerns without changing existing behavior, use ADDED instead
 
    ### Design writing guidance

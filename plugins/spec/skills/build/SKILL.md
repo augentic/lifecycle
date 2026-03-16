@@ -33,7 +33,7 @@ Implement tasks from a Specify change.
 
    Read `status` from `.metadata.yaml`:
    - If `status` is `defining`: warn that artifacts may be incomplete — some may not have been generated yet. Suggest running `/spec:define` to complete them.
-   - If `status` is `complete`: congratulate, all tasks already done. Suggest `/spec:promote`.
+   - If `status` is `complete`: congratulate, all tasks already done. Suggest `/spec:merge`.
    - Otherwise: proceed.
 
 4. **Check blueprint completion**
@@ -114,7 +114,7 @@ Implement tasks from a Specify change.
    - Progress: "N/M tasks complete"
    - Remaining tasks overview
 
-   If all tasks are already complete: congratulate, suggest `/spec:promote`.
+   If all tasks are already complete: congratulate, suggest `/spec:merge`.
 
 8. **Update lifecycle status**
 
@@ -151,7 +151,7 @@ Implement tasks from a Specify change.
    Display:
    - Tasks completed this session
    - Overall progress: "N/M tasks complete"
-   - If all done: suggest `/spec:promote`
+   - If all done: suggest `/spec:merge`
    - If paused: explain why and wait for guidance
 
 **Output During Implementation**
@@ -181,8 +181,8 @@ Task complete
 - [x] Task 2
 ...
 
-All tasks complete! Ready to promote this change.
-Run `/spec:promote` to finalize.
+All tasks complete! Ready to merge this change.
+Run `/spec:merge` to finalize.
 ```
 
 **Output On Pause (Issue Encountered)**

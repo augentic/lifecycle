@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Compare current code against baseline specs to detect drift. Use when the user wants to check whether the codebase still matches the promoted specifications.
+description: Compare current code against baseline specs to detect drift. Use when the user wants to check whether the codebase still matches the merged specifications.
 license: MIT
 ---
 
@@ -19,11 +19,11 @@ Optionally specify a capability name to verify. If omitted, verify all capabilit
    Verify `.specify/config.yaml` exists. If not:
    > "Specify is not initialized in this project. Run `/spec:init` to get started."
 
-   Read `.specify/config.yaml` for the `schema` value and **resolve the schema** using the **Schema Resolution** procedure (`references/schema-resolution.md`). Files needed: `schema.yaml`. Read `schema.yaml` for `terminology.unit` (infer plural and heading forms from the unit name). Read `references/spec-format.md` for heading conventions.
+   Read `.specify/config.yaml` for the `schema` value and **resolve the schema** using the **Schema Resolution** procedure (`references/schema-resolution.md`). Files needed: `schema.yaml`. Read `schema.yaml` for `terminology.deliverable` (infer plural and heading forms from the deliverable name). Read `references/spec-format.md` for heading conventions.
 
 2. **Locate baseline specs**
 
-   List directories in `.specify/specs/`. Each subdirectory with a `spec.md` file is a capability with a promoted baseline.
+   List directories in `.specify/specs/`. Each subdirectory with a `spec.md` file is a capability with a merged baseline.
 
    If no baseline specs exist:
    > "No baseline specs found under `.specify/specs/`. Nothing to verify."

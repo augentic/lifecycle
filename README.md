@@ -2,7 +2,7 @@
 
 Specify is a plugin system to orchestrate spec-driven software development. This repository provides the specialist skills used to power structured proposal-to-implementation workflows.
 
-Each change flows through a defined lifecycle — define, build, promote — with artifact validation built into the implementation step. All artifacts are version-controlled alongside your code.
+Each change flows through a defined lifecycle — define, build, merge — with artifact validation built into the implementation step. All artifacts are version-controlled alongside your code.
 
 ## Getting Started
 
@@ -32,10 +32,10 @@ This creates the `.specify/` directory with a `config.yaml` you can customize to
 
 ### Work through a change
 
-Once initialized, use the Specify workflow to define, build, and promote changes:
+Once initialized, use the Specify workflow to define, build, and merge changes:
 
 ```text
-/spec:define -> /spec:build -> /spec:promote
+/spec:define -> /spec:build -> /spec:merge
 ```
 
 To define a new change:
@@ -56,7 +56,7 @@ Core commands:
 
 - `/spec:define "description"` -- Generate a complete set of artifacts (proposal, specs, design, tasks) from a description of what you want to build.
 - `/spec:build` -- Validate artifacts against schema rules, then implement the tasks defined in the change artifacts.
-- `/spec:promote` -- Merge delta specs into the baseline and archive the completed change.
+- `/spec:merge` -- Merge delta specs into the baseline and archive the completed change.
 
 Additional commands:
 
@@ -69,7 +69,7 @@ Additional commands:
 
 Specify ships as a Cursor plugin marketplace with four plugins:
 
-- **Specify** (`spec`) -- Core workflow: define, build, promote, verify, explore
+- **Specify** (`spec`) -- Core workflow: define, build, merge, verify, explore
 - **Omnia** (`omnia`) -- Rust WASM crate generation, testing, and review
 - **RT** (`rt`) -- TypeScript analysis, fixture capture, and migration
 - **Plan** (`plan`) -- JIRA epic analysis and SoW generation

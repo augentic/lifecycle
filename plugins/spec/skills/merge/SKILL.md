@@ -1,12 +1,12 @@
 ---
-name: promote
-description: Promote a completed change. Merges delta specs into baseline and moves the change to the archive. Use when the user wants to finalize a change after implementation is complete.
+name: merge
+description: Merge a completed change. Merges delta specs into baseline and moves the change to the archive. Use when the user wants to finalize a change after implementation is complete.
 license: MIT
 ---
 
-# Promote
+# Merge
 
-Promote a completed change.
+Merge a completed change.
 
 ## Input
 
@@ -21,11 +21,11 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
    - If only one active change exists, use it but confirm with the user
    - If multiple, use the **AskQuestion tool** to let the user select
 
-   **IMPORTANT**: Always confirm the change name before promoting.
+   **IMPORTANT**: Always confirm the change name before merging.
 
    Read `.specify/changes/<name>/.metadata.yaml` for the schema value and status. **Resolve the schema** using the **Schema Resolution** procedure (`references/schema-resolution.md`). Files needed: `schema.yaml`.
 
-   Read `schema.yaml` for blueprint definitions and `terminology.unit` (e.g., "crate" vs "capability"). Infer plural and heading forms from the unit name. Use schema terminology in summary output. Read `references/spec-format.md` for heading conventions.
+   Read `schema.yaml` for blueprint definitions and `terminology.deliverable` (e.g., "crate" vs "capability"). Infer plural and heading forms from the deliverable name. Use schema terminology in summary output. Read `references/spec-format.md` for heading conventions.
 
 2. **Check lifecycle status**
 
@@ -70,7 +70,7 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
    For each capability with a delta spec, show what will happen WITHOUT performing the merge:
 
    ```text
-   ## Promote Preview: <change-name>
+   ## Merge Preview: <change-name>
 
    ### <capability-1>/spec.md (existing baseline)
    - REMOVING: REQ-001 — <name>
@@ -82,13 +82,13 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
    ```
 
    **Conflict detection**: For each capability with `type: modified` in `.metadata.yaml`'s `touched_specs` (if present), check if `.specify/specs/<capability>/spec.md` has been modified since `defined_at` (compare file modification time). If the baseline has changed since the change was defined:
-   - Warn: "The baseline for `<capability>` has been modified since this change was defined (possibly by promoting another change)."
+   - Warn: "The baseline for `<capability>` has been modified since this change was defined (possibly by merging another change)."
    - Use **AskQuestion tool**: proceed anyway, or cancel
 
    Use the **AskQuestion tool** to confirm:
    - **Proceed**: apply all merges
    - **Show full content**: display the complete merged baseline for each capability before writing
-   - **Cancel**: abort promote
+   - **Cancel**: abort merge
 
    Only proceed to the actual merge after user confirms.
 
@@ -117,7 +117,7 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
 
    d. **Check the exit code**:
       - Exit 0: merge succeeded. Proceed to the next capability.
-      - Exit 1: merge failed. Display the error messages from stderr and stop. Use the **AskQuestion tool** to let the user decide whether to fix the delta and retry, or abort the promote.
+      - Exit 1: merge failed. Display the error messages from stderr and stop. Use the **AskQuestion tool** to let the user decide whether to fix the delta and retry, or abort the merge.
 
 7. **Baseline coherence check**
 
@@ -136,15 +136,15 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
    **If any check fails** (exit code 1):
    - Display the failures from stderr
    - Use the **AskQuestion tool**:
-     - **Proceed anyway**: continue to promote despite the issues
-     - **Abort**: leave the change in its current directory for manual correction (the merged baseline files are already written; the user can edit them before re-running promote)
+     - **Proceed anyway**: continue to merge despite the issues
+     - **Abort**: leave the change in its current directory for manual correction (the merged baseline files are already written; the user can edit them before re-running merge)
 
    Only proceed to step 8 after user confirms.
 
 8. **Update metadata and move to archive**
 
    Update `.specify/changes/<name>/.metadata.yaml`:
-   - Set `status` to `promoted`
+   - Set `status` to `merged`
 
    ```bash
    mkdir -p .specify/changes/archive
@@ -158,10 +158,10 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
 ## Output On Success
 
 ```text
-## Promote Complete
+## Merge Complete
 
 **Change:** <change-name>
-**Promoted to:** .specify/changes/archive/YYYY-MM-DD-<name>/
+**Merged to:** .specify/changes/archive/YYYY-MM-DD-<name>/
 
 ### Specs Merged
 - <capability-1>: merged into .specify/specs/<capability-1>/spec.md
@@ -174,7 +174,7 @@ All artifacts complete. All tasks complete.
 
 ## Guardrails
 
-- Always confirm the change before promoting
+- Always confirm the change before merging
 - Warn on incomplete artifacts or tasks but don't block
 - Use `scripts/merge-specs.py` for all merge and validation operations — do not perform merges inline
 - If the merge tool is unavailable (e.g., `python3` not installed), fall back to manual merge following the algorithm in `delta-merge.md`

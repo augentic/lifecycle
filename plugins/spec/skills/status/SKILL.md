@@ -35,7 +35,7 @@ Optionally specify a change name to focus on. Otherwise show an overview.
    - `defining` — "Definition in progress (artifacts may be incomplete)"
    - `defined` — "All artifacts created, ready for implementation"
    - `building` — "Implementation in progress"
-   - `complete` — "All tasks complete, ready to promote"
+   - `complete` — "All tasks complete, ready to merge"
    - `dropped` — "Change discarded and moved to archive without merging specs"
 
    For each blueprint defined in `schema.yaml`, check whether it is complete:
@@ -68,11 +68,11 @@ Optionally specify a change name to focus on. Otherwise show an overview.
    - `defining` — "Run `/spec:define` to complete artifact generation, or `/spec:drop` to discard the change."
    - `defined` — "Run `/spec:build` to start implementing tasks, or `/spec:drop` to discard the change."
    - `building` — "Run `/spec:build` to continue implementation, or `/spec:drop` to discard the change." Show remaining task count.
-   - `complete` — "Run `/spec:promote` to finalize this change, or `/spec:drop` to discard it without merging specs."
+   - `complete` — "Run `/spec:merge` to finalize this change, or `/spec:drop` to discard it without merging specs."
 
 7. **List archived changes** (brief)
 
-   List directories in `.specify/changes/archive/` if any exist. If an archived directory contains `.metadata.yaml`, read its `status` and show whether it was `promoted` or `dropped`.
+   List directories in `.specify/changes/archive/` if any exist. If an archived directory contains `.metadata.yaml`, read its `status` and show whether it was `merged` or `dropped`.
 
 ## Output
 
@@ -97,7 +97,7 @@ Next: Run `/spec:build` to start implementing tasks.
 
 ### Archived Changes
 
-- 2026-01-15-add-auth (status: promoted)
+- 2026-01-15-add-auth (status: merged)
 - 2026-02-01-spike-export (status: dropped)
 ```
 
@@ -108,4 +108,4 @@ If a single change is specified or only one exists, show the detailed view only 
 - Read-only -- do not create or modify any files
 - If `.specify/` does not exist, suggest `/spec:init`
 - Show clear next-step guidance based on current lifecycle status
-- Distinguish promoted changes from dropped changes when metadata is available
+- Distinguish merged changes from dropped changes when metadata is available
