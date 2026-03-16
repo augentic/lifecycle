@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schema.schema.json
 name: omnia
 version: 1
 description: Omnia workflow
@@ -5,7 +6,7 @@ description: Omnia workflow
 terminology:
   unit: crate
 
-artifacts:
+blueprints:
   - id: proposal
     generates: proposal.md
     description: Initial proposal document
@@ -25,10 +26,13 @@ artifacts:
       - proposal
     validate:
       - Every requirement has at least one scenario
-      - Every requirement includes a stable ID line immediately after the heading
-      - Requirement IDs use the REQ-XXX format and stay stable when behavior is modified or renamed
+      - Every requirement includes a stable ID line immediately after the
+        heading
+      - Requirement IDs use the REQ-XXX format and stay stable when behavior is
+        modified or renamed
       - Uses SHALL/MUST language for normative requirements (not should/may)
-      - Requirements use the flat baseline format with top-level requirement headings
+      - Requirements use the flat baseline format with top-level requirement 
+        headings
       - Every scenario uses WHEN/THEN format
 
   - id: design
@@ -54,13 +58,13 @@ artifacts:
       - Tasks are grouped under numbered headings
       - At least one task exists
 
-# Built-in check names used during artifact validation in the apply skill (not extensible by schemas)
-cross-artifact-checks:
-  - proposal-crates-have-specs
-  - design-references-valid
-  - spec-format-valid
+validation:
+  proposal-crates-have-specs: true
+  design-references-valid: true
+  spec-format-valid: true
 
-apply:
-  requires: [tasks]
+build:
+  requires: 
+    - tasks
   tracks: tasks.md
-  instruction: instructions/apply.md
+  instruction: instructions/build.md

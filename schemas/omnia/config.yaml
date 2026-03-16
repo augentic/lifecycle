@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../config.schema.json
 # Config for the Omnia schema
 
 #  Config can be used to provide project-level overrides for the Omnia schema.

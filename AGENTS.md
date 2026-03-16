@@ -9,10 +9,10 @@ This is a **documentation/prompt-engineering repository**. The codebase consists
 Humans are expected to work through stock Specify:
 
 - `/spec:init` (once per project)
-- `/spec:propose`
-- `/spec:apply`
-- `/spec:archive`
-- `/spec:abandon`
+- `/spec:define`
+- `/spec:build`
+- `/spec:promote`
+- `/spec:drop`
 - `/spec:verify` (detect drift between code and baseline specs)
 
 This repository provides specialist skills and references that support that workflow.

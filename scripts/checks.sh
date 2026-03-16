@@ -110,6 +110,32 @@ if [ -n "$stale_hits" ]; then
   done
 fi
 
+# ──────────────────────────────────────────────────────────────
+# 4. Schema YAML files validate against JSON Schema
+# ──────────────────────────────────────────────────────────────
+# Requires: pip install check-jsonschema
+SCHEMA_DIR="$REPO_ROOT/schemas"
+
+if command -v check-jsonschema &>/dev/null; then
+  for schema_yaml in "$SCHEMA_DIR"/*/schema.yaml; do
+    [ -f "$schema_yaml" ] || continue
+    rel="$(python3 -c "import os; print(os.path.relpath('$schema_yaml', '$REPO_ROOT'))")"
+    if ! check-jsonschema --schemafile "$SCHEMA_DIR/schema.schema.json" "$schema_yaml" 2>&1; then
+      fail "Schema validation failed: $rel"
+    fi
+  done
+
+  for config_yaml in "$SCHEMA_DIR"/*/config.yaml; do
+    [ -f "$config_yaml" ] || continue
+    rel="$(python3 -c "import os; print(os.path.relpath('$config_yaml', '$REPO_ROOT'))")"
+    if ! check-jsonschema --schemafile "$SCHEMA_DIR/config.schema.json" "$config_yaml" 2>&1; then
+      fail "Config validation failed: $rel"
+    fi
+  done
+else
+  echo "SKIP: check-jsonschema not installed (pip install check-jsonschema)"
+fi
+
 echo
 if [ "$ERRORS" -gt 0 ]; then
   echo -e "${RED}${ERRORS} check(s) failed.${NC}"

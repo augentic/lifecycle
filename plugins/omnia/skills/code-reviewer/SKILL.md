@@ -636,7 +636,7 @@ Before completing review:
 
 **Overall auto-fix rate**: ~40-50% of issues
 
-### Integration with `/spec:apply`
+### Integration with `/spec:build`
 
 Add code review near the end of implementation, after generation and verification:
 
