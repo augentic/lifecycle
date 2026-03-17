@@ -259,7 +259,7 @@ async function validateSkillFrontmatter(): Promise<void> {
 
 **Check 7 — Skill reference link resolution (within skill directories):**
 
-Your existing link checker validates all markdown links repo-wide, but it doesn't understand the *semantic* relationship between a SKILL.md and its `references/` directory. This check would catch the case where a skill references `[guardrails.md](references/guardrails.md)` but the symlink `references/guardrails.md` hasn't been created yet — even though the target file exists elsewhere.
+Your existing link checker validates all markdown links repo-wide, but it doesn't understand the *semantic* relationship between a SKILL.md and its `references/` directory. This check would catch the case where a skill references `[guardrails.md](../plugins/omnia/references/guardrails.md)` but the symlink `references/guardrails.md` hasn't been created yet — even though the target file exists elsewhere.
 
 ```typescript
 async function checkSkillReferences(): Promise<void> {
