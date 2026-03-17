@@ -1,7 +1,7 @@
 ---
 name: sow-writer
 description: Generate a Statement of Work (SoW) document from Specify artifacts and project context.
-argument-hint: [change-dir] [output-path?] [client-name?] [company-name?] [--pdf?]
+argument-hint: "[change-dir] [output-path?] [client-name?] [company-name?] [--pdf?]"
 allowed-tools: Read, Write, StrReplace, Shell, Grep
 ---
 
@@ -58,6 +58,10 @@ IF $OUTPUT_PATH not provided:
   $OUTPUT_DIR  = dirname($CHANGE_DIR)/../
   $CRATE_NAME  = basename($CHANGE_DIR)
   $OUTPUT_PATH = $OUTPUT_DIR/SOW-$CRATE_NAME.md
+
+# Extracted from artifacts at runtime (Step 2):
+$PROJECT_NAME     = design.md ## Context → Purpose summary
+$SOURCE_REFERENCE = design.md header → Source field (if present)
 ```
 
 ## Process

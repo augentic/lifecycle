@@ -1,7 +1,7 @@
 ---
 name: epic-analyzer
 description: Produce Specify artifacts (proposal.md, specs/, design.md) from JIRA epic and user stories via MCP server.
-argument-hint: [epic-key] [change-dir]
+argument-hint: "[epic-key] [change-dir]"
 allowed-tools: Read, Write, StrReplace, Shell, mcp__atlassian__*
 ---
 

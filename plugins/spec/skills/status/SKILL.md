@@ -2,7 +2,7 @@
 name: status
 description: Show the current state of Specify changes -- active changes, artifact completion, and task progress. Use when the user wants to check where they are.
 license: MIT
-argument-hint: [change-name?]
+argument-hint: "[change-name?]"
 ---
 
 # Status
