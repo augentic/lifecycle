@@ -5,13 +5,9 @@
 
 set -euo pipefail
 
-# remove all marketplaces/github.com/augentic/specify/* directories
 SPECIFY_DIR="$HOME/.cursor/plugins/marketplaces/github.com/augentic/specify"
 
-rm -rf "$SPECIFY_DIR"/*/
-
-# clear the cache
-# rm -rf "$PLUGINS_DIR/cache/augentic"
+rm -rf "$SPECIFY_DIR"/*
 
 echo ""
 echo "Reload Cursor (or restart) to pick up production plugins."

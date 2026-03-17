@@ -8,15 +8,9 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SPECIFY_DIR="$HOME/.cursor/plugins/marketplaces/github.com/augentic/specify"
 
-rm -f "$SPECIFY_DIR/local"
-
 rm -rf "$SPECIFY_DIR"/*
 mkdir -p "$SPECIFY_DIR"
-
 ln -sfn "$REPO_ROOT" "$SPECIFY_DIR/local"
-
-# clear the cache
-# rm -rf "$PLUGINS_DIR/cache/augentic"
 
 echo ""
 echo "Reload Cursor (or restart) to pick up local plugins."
