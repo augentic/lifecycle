@@ -1,7 +1,7 @@
 ---
 name: wiretapper
 description: Add wiretap code to a cloned legacy TypeScript repo to capture request/response and side-effect data as fixture JSON; detect patterns, generate adapters, wire entrypoint, verify compile.
-argument-hint: [legacy-dir] [app-name?]
+argument-hint: "[legacy-dir] [app-name?]"
 allowed-tools: Read, Write, StrReplace, Shell, Grep
 ---
 

@@ -271,6 +271,308 @@ async function checkSymlinks(): Promise<void> {
 }
 
 // ──────────────────────────────────────────────────────────────
+// 6. SKILL.md frontmatter validation
+// ──────────────────────────────────────────────────────────────
+
+const KNOWN_TOOLS = new Set([
+  "Read", "Write", "StrReplace", "Shell", "Grep", "Glob",
+  "ReadLints", "WebFetch", "WebSearch", "AskQuestion", "Task",
+  "TodoWrite", "SemanticSearch", "EditNotebook", "GenerateImage",
+]);
+
+async function validateSkillFrontmatter(): Promise<void> {
+  const skillSchema = JSON.parse(
+    await Deno.readTextFile(join(SCHEMA_DIR, "skill.schema.json")),
+  );
+  const ajv = new Ajv2020({ allErrors: true });
+  const validate = ajv.compile(skillSchema);
+
+  const PLUGINS_DIR = join(REPO_ROOT, "plugins");
+
+  for await (const entry of walk(PLUGINS_DIR, {
+    match: [/SKILL\.md$/],
+    includeDirs: false,
+  })) {
+    if (await isUnderSymlink(entry.path)) continue;
+    const rel = relative(REPO_ROOT, entry.path);
+    const content = await Deno.readTextFile(entry.path);
+
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!fmMatch) {
+      fail(`Missing frontmatter: ${rel}`);
+      continue;
+    }
+
+    let fm: Record<string, unknown>;
+    try {
+      fm = parseYaml(fmMatch[1]) as Record<string, unknown>;
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      fail(`Invalid YAML frontmatter: ${rel} — ${msg}`);
+      continue;
+    }
+
+    if (!validate(fm)) {
+      for (const err of validate.errors ?? []) {
+        fail(
+          `Skill frontmatter: ${rel} — ${err.instancePath} ${err.message}`,
+        );
+      }
+    }
+
+    const dirName = entry.path.split("/").at(-2);
+    if (fm.name && fm.name !== dirName) {
+      fail(
+        `Skill name mismatch: ${rel} — name '${fm.name}' != dir '${dirName}'`,
+      );
+    }
+
+    const tools = fm["allowed-tools"];
+    if (typeof tools === "string") {
+      for (const tool of tools.split(",").map((t) => t.trim())) {
+        if (!tool) continue;
+        if (!KNOWN_TOOLS.has(tool) && !tool.startsWith("mcp__")) {
+          fail(`Unknown tool in allowed-tools: ${rel} — '${tool}'`);
+        }
+      }
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// 7. Skill reference link resolution
+// ──────────────────────────────────────────────────────────────
+
+async function checkSkillReferences(): Promise<void> {
+  const REF_LINK_RE = /\[([^\]]*)\]\((references\/[^)]+|examples\/[^)]+)\)/g;
+  const FENCE_RE = /```[\s\S]*?```/g;
+
+  const PLUGINS_DIR = join(REPO_ROOT, "plugins");
+
+  for await (const entry of walk(PLUGINS_DIR, {
+    match: [/SKILL\.md$/],
+    includeDirs: false,
+  })) {
+    if (await isUnderSymlink(entry.path)) continue;
+    const rel = relative(REPO_ROOT, entry.path);
+    const skillDir = dirname(entry.path);
+    const content = await Deno.readTextFile(entry.path);
+
+    const stripped = content.replace(FENCE_RE, "");
+
+    for (const m of stripped.matchAll(REF_LINK_RE)) {
+      const refPath = m[2].split("#")[0];
+      if (!refPath) continue;
+      const resolved = resolve(skillDir, refPath);
+      try {
+        await Deno.stat(resolved);
+      } catch {
+        fail(
+          `Skill reference missing: ${rel} links to '${refPath}' but it doesn't exist`,
+        );
+      }
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// 8. Skill variable consistency
+// ──────────────────────────────────────────────────────────────
+
+async function checkSkillVariables(): Promise<void> {
+  const DEF_RE = /^\$([A-Z_][A-Z_0-9]*)\s*=/gm;
+  const USE_RE = /\$([A-Z_][A-Z_0-9]*)/g;
+  const ARGS_HEADING_RE = /^## (?:Derived )?Arguments/m;
+  const CODE_BLOCK_RE = /```text\n([\s\S]*?)```/g;
+  const FENCE_RE = /```[\s\S]*?```/g;
+  const INLINE_CODE_RE = /`[^`]+`/g;
+  const BUILTIN = new Set(["ARGUMENTS", "HOME"]);
+
+  const PLUGINS_DIR = join(REPO_ROOT, "plugins");
+
+  for await (const entry of walk(PLUGINS_DIR, {
+    match: [/SKILL\.md$/],
+    includeDirs: false,
+  })) {
+    if (await isUnderSymlink(entry.path)) continue;
+    const rel = relative(REPO_ROOT, entry.path);
+    const content = await Deno.readTextFile(entry.path);
+
+    const headingMatch = content.match(ARGS_HEADING_RE);
+    if (!headingMatch || headingMatch.index === undefined) continue;
+    const headingIdx = headingMatch.index;
+
+    const afterHeading = content.slice(headingIdx + headingMatch[0].length);
+    const nextH2 = afterHeading.match(/\n## /);
+    const sectionEnd = nextH2
+      ? headingIdx + headingMatch[0].length + nextH2.index!
+      : content.length;
+    const argsSection = content.slice(headingIdx, sectionEnd);
+
+    const defined = new Set<string>();
+    const usedInDefs = new Set<string>();
+
+    for (const block of argsSection.matchAll(CODE_BLOCK_RE)) {
+      for (const m of block[1].matchAll(DEF_RE)) {
+        defined.add(m[1]);
+      }
+      for (const line of block[1].split("\n")) {
+        const eqIdx = line.indexOf("=");
+        if (eqIdx < 0) continue;
+        const rhs = line.slice(eqIdx + 1);
+        for (const m of rhs.matchAll(USE_RE)) {
+          if (!BUILTIN.has(m[1])) usedInDefs.add(m[1]);
+        }
+      }
+    }
+
+    if (defined.size === 0) continue;
+
+    const body = content.slice(sectionEnd);
+    const bodyNoFences = body.replace(FENCE_RE, "");
+
+    const usedInBody = new Set<string>();
+    for (const m of bodyNoFences.matchAll(USE_RE)) {
+      if (!BUILTIN.has(m[1])) usedInBody.add(m[1]);
+    }
+
+    const bodyStrict = bodyNoFences.replace(INLINE_CODE_RE, "");
+    const usedInBodyStrict = new Set<string>();
+    for (const m of bodyStrict.matchAll(USE_RE)) {
+      if (!BUILTIN.has(m[1])) usedInBodyStrict.add(m[1]);
+    }
+
+    for (const v of defined) {
+      if (!usedInBody.has(v) && !usedInDefs.has(v)) {
+        fail(
+          `Unused variable: ${rel} — $${v} defined but never referenced in body`,
+        );
+      }
+    }
+    for (const v of usedInBodyStrict) {
+      if (!defined.has(v) && !BUILTIN.has(v)) {
+        if (/^[A-Z][A-Z_]+$/.test(v)) {
+          fail(
+            `Undefined variable: ${rel} — $${v} used but not defined in Arguments`,
+          );
+        }
+      }
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// 9. Skill directive validation
+// ──────────────────────────────────────────────────────────────
+
+async function checkSkillDirectives(): Promise<void> {
+  const DIRECTIVE_RE = /<!-- skill: ([a-z][a-z0-9-]*):([a-z][a-z0-9-]*) -->/g;
+  const FENCE_RE = /```[\s\S]*?```/g;
+  const INLINE_CODE_RE = /`[^`]+`/g;
+
+  const PLUGINS_DIR = join(REPO_ROOT, "plugins");
+
+  const registry = new Map<string, Set<string>>();
+  for await (const entry of walk(PLUGINS_DIR, {
+    match: [/SKILL\.md$/],
+    includeDirs: false,
+  })) {
+    const parts = relative(PLUGINS_DIR, entry.path).split("/");
+    if (parts.length >= 4 && parts[1] === "skills") {
+      const plugin = parts[0];
+      const skill = parts[2];
+      if (!registry.has(plugin)) registry.set(plugin, new Set());
+      registry.get(plugin)!.add(skill);
+    }
+  }
+
+  const SKIP_DIRS = [/node_modules/, /\.git/, /temp/, /roadmap/];
+
+  for await (const entry of walk(REPO_ROOT, {
+    exts: [".md"],
+    includeDirs: false,
+  })) {
+    if (SKIP_DIRS.some((re) => re.test(entry.path))) continue;
+    if (await isUnderSymlink(entry.path)) continue;
+
+    let content: string;
+    try {
+      content = await Deno.readTextFile(entry.path);
+    } catch {
+      continue;
+    }
+    const rel = relative(REPO_ROOT, entry.path);
+
+    const stripped = content.replace(FENCE_RE, "").replace(INLINE_CODE_RE, "");
+
+    for (const m of stripped.matchAll(DIRECTIVE_RE)) {
+      const [, plugin, skill] = m;
+      if (!registry.has(plugin)) {
+        fail(`Invalid skill directive: ${rel} — plugin '${plugin}' not found`);
+      } else if (!registry.get(plugin)!.has(skill)) {
+        fail(
+          `Invalid skill directive: ${rel} — skill '${plugin}:${skill}' not found`,
+        );
+      }
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// 10. Cross-plugin consistency with marketplace.json
+// ──────────────────────────────────────────────────────────────
+
+async function checkPluginConsistency(): Promise<void> {
+  const manifestPath = join(REPO_ROOT, ".cursor-plugin", "marketplace.json");
+  let manifest: {
+    plugins: { name: string; source: string }[];
+  };
+  try {
+    manifest = JSON.parse(await Deno.readTextFile(manifestPath));
+  } catch {
+    fail("Cannot read .cursor-plugin/marketplace.json");
+    return;
+  }
+
+  const declaredSources = new Set(manifest.plugins.map((p) => p.source));
+
+  const PLUGINS_DIR = join(REPO_ROOT, "plugins");
+  for await (const entry of walk(PLUGINS_DIR, {
+    maxDepth: 3,
+    match: [/plugin\.json$/],
+    includeDirs: false,
+  })) {
+    const relParts = relative(PLUGINS_DIR, entry.path).split("/");
+    if (
+      relParts.length === 3 &&
+      relParts[1] === ".cursor-plugin" &&
+      relParts[2] === "plugin.json"
+    ) {
+      const pluginDir = relParts[0];
+      if (!declaredSources.has(pluginDir)) {
+        fail(
+          `Plugin '${pluginDir}' has .cursor-plugin/plugin.json but is not in marketplace.json`,
+        );
+      }
+    }
+  }
+
+  for (const p of manifest.plugins) {
+    const skillsDir = join(PLUGINS_DIR, p.source, "skills");
+    try {
+      const stat = await Deno.stat(skillsDir);
+      if (!stat.isDirectory) {
+        fail(`Plugin '${p.name}' has no skills/ directory`);
+      }
+    } catch {
+      fail(
+        `Plugin '${p.name}' declared in marketplace.json but skills/ not found`,
+      );
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
 // Run all checks
 // ──────────────────────────────────────────────────────────────
 
@@ -282,6 +584,13 @@ await Promise.all([
 await Promise.all([
   validateSchemaYaml(),
   checkSchemaIntegrity(),
+]);
+await Promise.all([
+  validateSkillFrontmatter(),
+  checkSkillReferences(),
+  checkSkillVariables(),
+  checkSkillDirectives(),
+  checkPluginConsistency(),
 ]);
 
 console.log();

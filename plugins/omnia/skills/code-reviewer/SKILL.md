@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: AI-powered code review for generated Rust crates, catching security issues and quality problems
-argument-hint: [crate-path] [--fix?]
+argument-hint: "[crate-path] [--fix?]"
 allowed-tools: Read, Write, StrReplace, Shell, Grep
 ---
 
@@ -321,7 +321,7 @@ The antagonist:
 
 ### Step 4: Synthesis
 
-The lead merges all findings into `$CRATE_PATH/REVIEW.md`:
+The lead merges all findings into `$REVIEW_OUTPUT`:
 
 1. **Confirmed findings**: Include verbatim from specialist reports
 2. **Downgraded findings**: Include with the antagonist's revised severity and rationale
