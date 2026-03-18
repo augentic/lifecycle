@@ -20,12 +20,19 @@ Available schemas are:
 | Schema | URL | Use case |
 | ------ | --- | -------- |
 | `omnia` | `https://github.com/augentic/specify/schemas/omnia` | Greenfield [Omnia](https://omnia.host) development |
+| `vectis` | `https://github.com/augentic/specify/schemas/vectis` | Cross-platform [Crux](https://redbadger.github.io/crux/) apps (Rust core, iOS/Android shells) |
 
 
 For example, to initialize a new Omnia project:
 
 ```text
 /spec:init https://github.com/augentic/specify/schemas/omnia
+```
+
+Or to start a new cross-platform Crux app:
+
+```text
+/spec:init https://github.com/augentic/specify/schemas/vectis
 ```
 
 This creates the `.specify/` directory with a `config.yaml` you can customize to describe your project's tech stack, architecture, and constraints. Schema URLs support an optional `@ref` suffix (e.g., `@v1`, `@main`) to pin a specific version.
@@ -67,10 +74,11 @@ Additional commands:
 
 ## Plugins
 
-Specify ships as a Cursor plugin marketplace with four plugins:
+Specify ships as a Cursor plugin marketplace with five plugins:
 
 - **Specify** (`spec`) -- Core workflow: define, build, merge, verify, explore
 - **Omnia** (`omnia`) -- Rust WASM crate generation, testing, and review
+- **Vectis** (`vectis`) -- Cross-platform Crux app generation (Rust core, iOS shells, design system)
 - **RT** (`rt`) -- TypeScript analysis, fixture capture, and migration
 - **Plan** (`plan`) -- JIRA epic analysis and SoW generation
 
@@ -90,7 +98,7 @@ This runs `scripts/checks.ts` via [Deno](https://deno.land). Deno must be instal
 
 ### Local plugin development
 
-To test plugins locally before releasing to the marketplace (preserves namespacing and interdependencies such as `/spec:build` → `/omnia:crate-writer`):
+To test plugins locally before releasing to the marketplace (preserves namespacing and interdependencies such as `/spec:build` → `/omnia:crate-writer` or `/spec:build` → `/vectis:core-writer`):
 
 ```bash
 make dev-plugins
