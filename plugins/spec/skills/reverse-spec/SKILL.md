@@ -2,7 +2,7 @@
 name: reverse-spec
 description: Reverse-engineer Specify artifacts (specs + design.md) from existing source code with iterative validation. Use when the proposal source is a local path to existing code, or when /spec:define is given a source-code path to analyze.
 license: MIT
-argument-hint: [source-path] [change-dir]
+argument-hint: "[source-path] [change-dir]"
 ---
 
 # Reverse Spec
@@ -249,12 +249,12 @@ loop:
   pass += 1
   discrepancies = run V1 through V6 against source
   
-  report all discrepancies with severity
-  
   if no CRITICAL or HIGH discrepancies: break (CONVERGED)
+  
+  report all discrepancies with severity
   fix resolvable items; ask user about ambiguous items
   
-  if pass >= 5: HALT and escalate remaining issues
+  if pass > 5: HALT and escalate remaining issues
 ```
 
 ### Anti-Pattern: Shallow Validation
