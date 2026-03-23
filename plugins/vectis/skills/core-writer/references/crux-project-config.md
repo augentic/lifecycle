@@ -362,14 +362,48 @@ allowed-duplicate-crates = []
 
 ## `.gitignore`
 
+The root `.gitignore` covers all platforms a Crux app may target. Include
+every section even if the project does not use all shells yet -- this
+future-proofs the repository for when new shells are added.
+
 ```
+# OS
+.DS_Store
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Rust
 /target
 Cargo.lock
+
+# Swift / Xcode
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+build/
+iOS/generated/
+iOS/*.xcodeproj
+
+# TypeScript / Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Kotlin / Gradle
+.gradle/
+*.apk
+*.aab
+local.properties
 ```
 
 Include `Cargo.lock` in `.gitignore` for library crates (the standard Rust convention).
 If the project is an application (has binary targets other than codegen), keep `Cargo.lock`
 tracked instead.
+
+The `build/` entry covers both Xcode and Gradle output directories.
 
 ## Complete Example: Workspace with HTTP + KV
 

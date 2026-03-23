@@ -155,7 +155,7 @@ Consult `references/crux-app-pattern.md` for type conventions.
 
 ### 3. Generate workspace files
 
-Create the workspace root with two files:
+Create the workspace root files:
 
 **`{project-dir}/Cargo.toml`** -- workspace manifest:
 ```toml
@@ -232,6 +232,11 @@ targets = [
 ]
 profile = "minimal"
 ```
+
+**`{project-dir}/.gitignore`** -- multi-platform ignore rules. Use the full
+`.gitignore` template from `references/crux-project-config.md`. This covers
+Rust, Swift/Xcode, TypeScript/Node, Kotlin/Gradle, `.DS_Store`, and `.env`
+so the repository is ready for any shell that may be added later.
 
 ### 4. Generate `shared/Cargo.toml`
 
