@@ -45,13 +45,13 @@ Install the [Swift Language Support](https://open-vsx.org/extension/chrisatwinds
 
 ## Creating a Crux App
 
-App generation uses the Specify workflow with the `vectis` schema. Each app is a Specify **change** that produces a proposal, specs, design, and tasks. The build phase invokes the `core-writer` skill to generate a buildable `shared` crate with business logic, state management, side-effect orchestration, and tests.
+App generation uses the Specify workflow with the `vectis` schema. Each app is a Specify **change** that produces a proposal, specs, design, and tasks. The proposal describes the feature and declares which platforms to target. The build phase invokes the appropriate skills (core-writer, ios-writer, design-system-writer) based on the platforms declared.
 
 ### Define a new app
 
 Describe what you want to build and Specify generates all artifacts:
 
-> `/spec:define` -- A weather app that fetches 5-day forecasts from a REST API and displays them in a scrollable list. It should cache the last fetch in Key-Value storage for offline use.
+> `/spec:define` -- A weather app that fetches 5-day forecasts from a REST API and displays them in a scrollable list. It should cache the last fetch in Key-Value storage for offline use. Target iOS.
 
 Or start interactively and let the agent ask clarifying questions:
 
@@ -61,10 +61,12 @@ Specify produces four artifacts in dependency order:
 
 | Artifact      | Purpose                                                   |
 | ------------- | --------------------------------------------------------- |
-| `proposal.md` | App concept, motivation, module names and types            |
+| `proposal.md` | App concept, motivation, feature names, target platforms   |
 | `specs/*.md`  | Behavioral requirements with scenarios                     |
 | `design.md`   | Crux type system, capabilities, API contracts, constraints |
 | `tasks.md`    | Implementation checklist for skill invocation              |
+
+The proposal lists **features** (what the app does, e.g. `weather-forecast`) and **platforms** (which implementations to build, e.g. `core, ios`). Each feature gets a single spec file that covers core behavioral requirements and platform-specific requirements in dedicated sections.
 
 Review the artifacts in `.specify/changes/<change-name>/`. Edit them by hand or ask the agent to revise before proceeding.
 
@@ -72,7 +74,9 @@ Review the artifacts in `.specify/changes/<change-name>/`. Edit them by hand or 
 
 > `/spec:build`
 
-The agent works through the tasks: invokes the `core-writer` skill to generate the `shared` crate, verifies with `cargo check`, `cargo test`, and `cargo clippy`, then runs the `core-reviewer` skill. The code review covers three passes:
+The agent works through the tasks in platform order: design-system first, then core, then shells. For the core, it invokes the `core-writer` skill to generate the `shared` crate, verifies with `cargo check`, `cargo test`, and `cargo clippy`, then runs the `core-reviewer` skill. If iOS is in scope, it invokes the `ios-writer` skill, verifies the build, then runs the `ios-reviewer` skill.
+
+The code review covers three passes:
 
 - **Structural** -- missing `render()` calls, serde derives, input validation
 - **Logic** -- state machine completeness, operation coalescing, race conditions, conflict-resolution gaps, spec gap detection
@@ -86,7 +90,7 @@ Once you are satisfied with the output:
 
 > `/spec:merge`
 
-This merges the change's specs into the project baseline at `.specify/specs/` and archives the change.
+This merges the change's specs into the project baseline at `.specify/specs/` and archives the change. One feature spec merges into one baseline file.
 
 ### Update an existing app
 
@@ -107,25 +111,32 @@ Shows active changes, artifact completion, and task progress.
 
 ## Spec Format
 
-The specs artifact follows a structured markdown format. Required elements for core modules:
+The specs artifact follows a structured markdown format. Each feature spec has a main body of platform-neutral requirements and optional platform-specific sections:
 
-| Section            | What to include                                                         |
-| ------------------ | ----------------------------------------------------------------------- |
-| **Purpose**        | One-line summary of the app or module                                   |
-| **Requirements**   | Every user action and its expected outcome, with scenarios              |
-| **Error Conditions** | Error states and recovery behavior                                   |
-| **Metrics**        | Observable metrics (optional)                                           |
+| Section                      | What to include                                               |
+| ---------------------------- | ------------------------------------------------------------- |
+| **Purpose**                  | One-line summary of the feature                               |
+| **Requirements**             | Every user action and its expected outcome, with scenarios     |
+| **Error Conditions**         | Error states and recovery behavior                            |
+| **Metrics**                  | Observable metrics (optional)                                 |
+| **iOS Shell Requirements**   | iOS-specific behaviors: navigation, gestures, haptics         |
+| **Android Shell Requirements** | Android-specific behaviors (future)                         |
+| **Design System Requirements** | Token change requirements (if applicable)                   |
+
+Platform requirement IDs use a prefix convention (`REQ-IOS-xxx`, `REQ-AND-xxx`, `REQ-DS-xxx`) to avoid collisions with core `REQ-xxx` IDs.
 
 The design document captures the technical contract:
 
-| Section            | What to include                                                         |
-| ------------------ | ----------------------------------------------------------------------- |
-| **Context**        | Module types in scope and their relationships                           |
-| **Domain Model**   | The internal state the app tracks (Model fields)                        |
-| **Type System**    | Event variants, ViewModel enum, Effect enum, Route enum                 |
-| **Capabilities**   | Which external capabilities the app needs (see table below)             |
-| **API Details**    | HTTP endpoints, methods, request/response shapes. Omit if no HTTP       |
-| **Constraints**    | Implementation constraints (Crux version, uniffi pin, etc.)             |
+| Section                | What to include                                                       |
+| ---------------------- | --------------------------------------------------------------------- |
+| **Context**            | Platforms in scope and their relationships                            |
+| **Domain Model**       | The internal state the app tracks (Model fields)                      |
+| **Type System**        | Event variants, ViewModel enum, Effect enum, Route enum               |
+| **Capabilities**       | Which external capabilities the app needs (see table below)           |
+| **API Details**        | HTTP endpoints, methods, request/response shapes. Omit if no HTTP     |
+| **iOS Shell Details**  | Navigation style, screen customizations, platform features            |
+| **Design System Details** | Token categories, value shapes, downstream consumers               |
+| **Constraints**        | Implementation constraints (Crux version, uniffi pin, etc.)           |
 
 ### Capabilities
 
@@ -142,7 +153,7 @@ The skill detects which Crux capabilities your app needs from the **Capabilities
 
 ## What Gets Generated
 
-A core module produces these files:
+The core-writer skill produces these files:
 
 | Artifact                      | Description                                                                                |
 | ----------------------------- | ------------------------------------------------------------------------------------------ |
@@ -157,44 +168,32 @@ A core module produces these files:
 
 Custom capability modules (e.g. `shared/src/sse.rs` for Server-Sent Events) are generated when needed.
 
-## Creating an iOS Shell
+When iOS is in scope, the ios-writer skill produces:
 
-iOS shell generation uses the same Specify workflow. Each shell is a change that produces a SwiftUI application wired to the Crux core via UniFFI. Only iOS shells are currently supported; other platform shells will be added in future.
-
-### Define
-
-Define a change with an `ios-shell` module:
-
-> `/spec:define` -- Create an iOS shell for the weather app. Put it in `ios/`.
-
-The agent produces artifacts describing the shell:
-
-| Artifact        | Purpose                                                             |
-| --------------- | ------------------------------------------------------------------- |
-| `proposal.md`   | Which app, target directory, design system notes                    |
-| `specs/*.md`    | iOS-specific behavioral requirements (navigation, gestures)         |
-| `design.md`     | Navigation style, screen customizations, platform features          |
-| `tasks.md`      | Implementation checklist -- invoke ios-writer, verify build, review |
-
-### Build
-
-> `/spec:build`
-
-The agent invokes the `ios-writer` skill, which reads the Crux core's `app.rs` to extract ViewModel, Event, Effect, and Route types. It generates:
-
-- `project.yml` -- XcodeGen project configuration
-- `Makefile` -- build automation
-- `Core.swift` -- bridge between SwiftUI and the Rust core
-- SwiftUI screen views -- one per ViewModel variant
-- App entry point with navigation
+| Artifact                      | Description                                                |
+| ----------------------------- | ---------------------------------------------------------- |
+| `project.yml`                 | XcodeGen project configuration                             |
+| `Makefile`                    | Three-phase build pipeline (typegen, package, xcode)       |
+| `{AppName}/Core.swift`        | Bridge between SwiftUI and the Rust core                   |
+| `{AppName}/ContentView.swift` | Root view switching on ViewModel variants                  |
+| `{AppName}/Views/*.swift`     | One screen view per ViewModel variant                      |
+| `{AppName}/{AppName}App.swift` | App entry point with VectisDesign theme                   |
 
 All views use the shared `VectisDesign` package for colors, typography, and spacing tokens.
 
-After generation, the `ios-reviewer` skill reviews the shell for:
+## Platforms
 
-- **Structural** -- missing screen views, incomplete effect handlers
-- **Quality** -- concurrency safety, accessibility, design system compliance
-- **Integration** -- Core.swift correctness, build configuration
+Platforms are declared in the proposal and determine which skills the build phase invokes. A single feature change can target multiple platforms simultaneously.
+
+| Platform         | Description                                   | Build Skill              |
+| ---------------- | --------------------------------------------- | ------------------------ |
+| `core`           | Rust Crux shared crate (always required)      | `vectis:core-writer`     |
+| `ios`            | SwiftUI iOS shell                             | `vectis:ios-writer`      |
+| `android`        | Android shell (future)                        | --                       |
+| `web`            | Web shell (future)                            | --                       |
+| `design-system`  | VectisDesign Swift package from tokens.yaml   | `vectis:design-system-writer` |
+
+Build order: design-system first, core second, shells last. Each skill reads the single feature spec and extracts the sections relevant to it.
 
 ## Design System
 
@@ -207,6 +206,16 @@ The design system provides platform-agnostic design tokens with platform-specifi
 | `design-system/ios/`        | `VectisDesign` Swift Package -- generated from `tokens.yaml`          |
 
 The design system is shared across all apps generated by the ios-writer skill. Future platform shells (Android, Web) will add their own implementations under `design-system/` using the same tokens.
+
+### Design system as part of a feature
+
+When a feature needs new or updated tokens, include `design-system` in the proposal's Platforms list and add a `## Design System Requirements` section to the feature spec. The build phase invokes the design-system-writer skill before the core and shell skills.
+
+### Standalone design system changes
+
+For changes that only affect the design system (e.g., updating brand colors), define a feature for the change with `design-system` as the platform:
+
+> `/spec:define` -- Update brand colors to new palette
 
 ### Updating the Design System
 

@@ -1,6 +1,6 @@
 ---
 name: core-writer
-description: Generate or update a Rust Crux shared crate from Specify artifacts. Use when implementing core module tasks from a Specify change, or when the user mentions core-writer.
+description: Generate or update a Rust Crux shared crate from Specify artifacts. Use when implementing core tasks from a Specify change, or when the user mentions core-writer.
 ---
 
 # Crux Core Application Generator
@@ -22,15 +22,17 @@ Dependencies use git references with a tag until the crate is published to crate
 | Argument | Required | Description |
 |---|---|---|
 | `change-dir` | **Yes** | Path to the active Specify change directory (`.specify/changes/<change>/`). |
-| `module-name` | **Yes** | Spec folder name under `{change-dir}/specs/` identifying the module to generate. |
+| `feature-name` | **Yes** | Spec folder name under `{change-dir}/specs/` identifying the feature to generate. |
 | `project-dir` | No | Directory to create the project in. Defaults to current directory. |
 
 ## Input Artifacts
 
 The skill reads from Specify artifacts rather than a standalone spec file:
 
-- **Spec**: `{change-dir}/specs/{module-name}/spec.md` -- behavioral requirements
-  using `### Requirement:` / `#### Scenario:` format.
+- **Spec**: `{change-dir}/specs/{feature-name}/spec.md` -- behavioral requirements
+  using `### Requirement:` / `#### Scenario:` format. The skill reads the **core
+  requirements** (main body of the spec). Platform-specific sections (e.g.
+  `## iOS Shell Requirements`) are not relevant to core generation and are ignored.
 - **Design**: `{change-dir}/design.md` -- domain model, capabilities, API contracts,
   and technical design decisions.
 
@@ -54,7 +56,7 @@ the artifacts are too ambiguous to proceed.
 
 | Derived | How to infer | Example |
 |---|---|---|
-| **App struct name** | PascalCase noun from the design overview or module name | `TodoApp`, `NoteEditor`, `Counter` |
+| **App struct name** | PascalCase noun from the design overview or feature name | `TodoApp`, `NoteEditor`, `Counter` |
 | **Model** | Internal state fields from Design Domain Model section | `todos: Vec<Todo>`, `filter: Filter` |
 | **Event** | User actions from spec Requirements + internal callback variants from Capabilities + `Navigate(Route)` | `AddTodo(String)`, `Fetched(Result<...>)`, `Navigate(Route)` |
 | **ViewModel variants** | One variant per view from spec Requirements about views/pages | `ViewModel::Loading`, `ViewModel::TodoList(TodoListView)` |
@@ -102,9 +104,11 @@ Use this process when no existing project is found at `{project-dir}`.
 
 ### 1. Read and analyze the Specify artifacts
 
-Read the spec at `{change-dir}/specs/{module-name}/spec.md` and the design at
-`{change-dir}/design.md`. Extract:
-- The core concept and app name (from the design overview or module name)
+Read the spec at `{change-dir}/specs/{feature-name}/spec.md` and the design at
+`{change-dir}/design.md`. Extract core requirements from the main body of the spec
+(stop before any `## ... Shell Requirements` or `## Design System Requirements`
+sections):
+- The core concept and app name (from the design overview or feature name)
 - State that needs to be tracked (from **Design Domain Model** -> Model)
 - Actions the user can take (from **Spec Requirements** with feature scenarios -> shell-facing Event variants)
 - Side-effects needed (from **Design Capabilities** -> Effect variants and internal Event variants)
@@ -390,7 +394,7 @@ targeted, minimal edits. Never regenerate a file from scratch in update mode.
 
 ### U1. Read and analyze the Specify artifacts
 
-Same extraction as create mode step 1. Read `{change-dir}/specs/{module-name}/spec.md`
+Same extraction as create mode step 1. Read `{change-dir}/specs/{feature-name}/spec.md`
 and `{change-dir}/design.md`. Build the full picture of the desired application state:
 app name, features, data model, UI, capabilities, API shapes, and business rules.
 

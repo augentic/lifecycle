@@ -1,18 +1,20 @@
 Create the design document to explain HOW to implement the change.
 
-Include only the sections relevant to the module types in scope. A change
-that only modifies a core module does not need iOS shell sections.
+Include sections based on the platforms declared in the proposal.
+The Domain Model and Capabilities sections are always present (core
+is always in scope). Platform-specific sections are included only when
+the corresponding platform is listed in the proposal.
 
 ## Output Structure
 
 ```markdown
 ## Context
 
-<!-- Module types in scope, purpose, and background for this change -->
+<!-- Platforms in scope (from proposal), purpose, and background for this change -->
 
 ## Domain Model
 
-<!-- For core modules: Crux type system design.
+<!-- Crux type system design.
 
 Define these types (see guidance below each):
 
@@ -70,18 +72,27 @@ Define these types (see guidance below each):
 
 ## API Contracts
 
-<!-- For core modules with HTTP capability:
-Endpoints with method, URL, request/response shapes, errors -->
+<!-- Endpoints with method, URL, request/response shapes, errors.
+Include only when HTTP capability is used. -->
 
-## Platform Details
+## iOS Shell Details
 
-<!-- For ios-shell modules:
+<!-- Include when ios is listed in Platforms.
 - Navigation style (single, stack, tabs)
 - Screen customizations per ViewModel variant
 - Platform features (haptics, share sheet, etc.)
-- Design system overrides
+- Design system overrides -->
 
-For design-system modules:
+## Android Shell Details
+
+<!-- Include when android is listed in Platforms (future).
+- Navigation patterns
+- Screen customizations
+- Platform features -->
+
+## Design System Details
+
+<!-- Include when design-system is listed in Platforms.
 - Token categories and value shapes
 - Downstream consumers -->
 
