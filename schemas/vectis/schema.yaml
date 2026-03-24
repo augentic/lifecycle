@@ -101,8 +101,9 @@ defaults:
         rules to requirements with validation scenarios
       - Place platform-specific behavioral requirements in dedicated sections
         (## iOS Shell Requirements, ## Android Shell Requirements, etc.)
-      - Use prefixed IDs for platform requirements (REQ-IOS-xxx, REQ-AND-xxx,
-        REQ-DS-xxx) to avoid collisions with core REQ-xxx IDs
+      - Use the same REQ-### ID namespace for platform-specific requirements;
+        do not introduce additional prefixes (e.g. REQ-IOS-xxx) because the
+        shared spec-format contract requires IDs to match ^REQ-[0-9]{3}$
     design: |
       - Include Context section identifying the platforms in scope
       - Document the Crux type system: App struct name, Model fields, Event
