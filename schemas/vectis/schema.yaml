@@ -35,8 +35,8 @@ blueprints:
       - Requirements use the flat baseline format with top-level requirement
         headings
       - Every scenario uses WHEN/THEN format
-      - Platform requirement IDs use a prefix convention (REQ-IOS-xxx,
-        REQ-AND-xxx, REQ-DS-xxx)
+      - Platform requirements share the same REQ-XXX ID namespace (no platform
+        prefixes)
 
   - id: design
     generates: design.md
