@@ -190,3 +190,20 @@ immediately followed by `@MainActor in`. Flag all occurrences in
 `processEffect` method branches.
 
 **Fix**: Replace `Task {` with `Task { @MainActor in`.
+
+## IOS-015: Missing try on CoreFFI calls
+
+**Severity**: Critical
+
+`CoreFFI` methods (`view()`, `update()`, `resolve()`) return
+`Result<Vec<u8>, CoreError>` in Rust, which UniFFI maps to Swift `throws`.
+Calling these without `try` is a compile error. All calls must use `try?`
+with `assertionFailure` and a safe fallback, consistent with the bincode
+serialization pattern (IOS-013).
+
+**Detection**: Search `Core.swift` for `core.view()`, `core.update(`,
+and `core.resolve(` that are not preceded by `try`. Flag all occurrences.
+
+**Fix**: Wrap each call with `guard let ... = try? ... else {
+assertionFailure(...); return }`. Use the `deserializeView(from:)` helper
+for `core.view()` calls. See `references/crux-ios-shell-pattern.md`.

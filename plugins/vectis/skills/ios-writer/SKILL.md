@@ -484,6 +484,7 @@ Same as create mode step 11:
 - [ ] Interactive icons have `accessibilityLabel`
 - [ ] No force unwraps (`!`) or force try (`try!`) in production code
 - [ ] Bincode serialization failures use `assertionFailure` + safe fallback, not `try!`
+- [ ] CoreFFI calls (`core.view()`, `core.update()`, `core.resolve()`) use `try?` with `assertionFailure`
 - [ ] Async effect handlers use `Task { @MainActor in }`, not bare `Task { }`
 - [ ] Swift strict concurrency checking enabled (`SWIFT_STRICT_CONCURRENCY: complete`)
 

@@ -61,7 +61,7 @@ class Core: ObservableObject {
 
     init() {
         self.core = CoreFfi()
-        self.view = Self.deserializeView(core.view())
+        self.view = Self.deserializeView(from: core)
     }
 
     func update(_ event: Event) {
@@ -69,8 +69,11 @@ class Core: ObservableObject {
             assertionFailure("Failed to serialize event: \(event)")
             return
         }
-        let effects = [UInt8](core.update(Data(data)))
-        processEffects(effects)
+        guard let effectsData = try? core.update(Data(data)) else {
+            assertionFailure("CoreFFI.update() failed")
+            return
+        }
+        processEffects([UInt8](effectsData))
     }
 
     private func processEffects(_ data: [UInt8]) {
@@ -86,11 +89,15 @@ class Core: ObservableObject {
     func processEffect(_ request: Request) {
         switch request.effect {
         case .render:
-            self.view = Self.deserializeView(core.view())
+            self.view = Self.deserializeView(from: core)
         }
     }
 
-    private static func deserializeView(_ data: Data) -> ViewModel {
+    private static func deserializeView(from core: CoreFfi) -> ViewModel {
+        guard let data = try? core.view() else {
+            assertionFailure("CoreFFI.view() failed")
+            return .loading
+        }
         guard let vm = try? ViewModel.bincodeDeserialize(input: [UInt8](data)) else {
             assertionFailure("Failed to deserialize ViewModel")
             return .loading
@@ -108,7 +115,7 @@ Add the `.http` case to the effect switch. Use `URLSession` for the request.
 func processEffect(_ request: Request) {
     switch request.effect {
     case .render:
-        self.view = Self.deserializeView(core.view())
+        self.view = Self.deserializeView(from: core)
 
     case .http(let httpRequest):
         Task { @MainActor in
@@ -117,10 +124,11 @@ func processEffect(_ request: Request) {
                 assertionFailure("Failed to serialize HttpResult")
                 return
             }
-            let effects = [UInt8](
-                core.resolve(request.id, Data(data))
-            )
-            processEffects(effects)
+            guard let effectsData = try? core.resolve(request.id, Data(data)) else {
+                assertionFailure("CoreFFI.resolve() failed")
+                return
+            }
+            processEffects([UInt8](effectsData))
         }
     }
 }
@@ -177,10 +185,11 @@ case .keyValue(let kvOp):
             assertionFailure("Failed to serialize KeyValueResult")
             return
         }
-        let effects = [UInt8](
-            core.resolve(request.id, Data(data))
-        )
-        processEffects(effects)
+        guard let effectsData = try? core.resolve(request.id, Data(data)) else {
+            assertionFailure("CoreFFI.resolve() failed")
+            return
+        }
+        processEffects([UInt8](effectsData))
     }
 ```
 
@@ -198,10 +207,11 @@ case .serverSentEvents(let sseRequest):
                 assertionFailure("Failed to serialize SSE response")
                 continue
             }
-            let effects = [UInt8](
-                core.resolve(request.id, Data(data))
-            )
-            processEffects(effects)
+            guard let effectsData = try? core.resolve(request.id, Data(data)) else {
+                assertionFailure("CoreFFI.resolve() failed")
+                continue
+            }
+            processEffects([UInt8](effectsData))
         }
     }
 ```
@@ -243,7 +253,7 @@ load persisted state or fetch initial data.
 ```swift
 init() {
     self.core = CoreFfi()
-    self.view = Self.deserializeView(core.view())
+    self.view = Self.deserializeView(from: core)
     update(.navigate(.main))
 }
 ```

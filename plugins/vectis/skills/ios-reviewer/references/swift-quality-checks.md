@@ -7,16 +7,17 @@ Language-level quality checks for Swift/SwiftUI code in Crux iOS shells.
 **Severity**: Warning
 
 No `!` force unwraps or `try!` force tries outside of test files and
-preview providers.
+preview blocks.
 
 `Core.swift` bincode serialization must use `try?` with `assertionFailure`
 and a safe fallback (e.g., return `.loading` for view deserialization,
 no-op for event serialization). This ensures Debug builds surface type
 mismatches loudly while Release builds degrade gracefully.
 
-**Detection**: Search `.swift` files (excluding `*Tests.swift` and
-`*Previews.swift`) for `!` used as force unwrap (not `!=` or `!==`)
-and for `try!`. Flag all occurrences including those in `Core.swift`.
+**Detection**: Search `.swift` files (excluding `*Tests.swift`) for `!`
+used as force unwrap (not `!=` or `!==`) and for `try!`. Skip occurrences
+inside `#Preview { ... }` blocks and in files named `*Previews.swift`.
+Flag all other occurrences including those in `Core.swift`.
 
 **Fix**: Replace `try!` with `guard let ... = try? ... else { assertionFailure(...); return fallback }`.
 Replace `as!` with `as?` guarded by a conditional.
