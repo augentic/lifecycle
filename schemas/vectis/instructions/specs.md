@@ -80,7 +80,7 @@ platform prefixes like `REQ-IOS-xxx`.
 
 ### Requirement: <Platform Behavior>
 
-ID: REQ-006
+ID: REQ-<next>
 
 The iOS shell SHALL <platform-specific behavioral description>.
 
