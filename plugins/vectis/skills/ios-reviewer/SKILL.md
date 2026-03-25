@@ -20,7 +20,7 @@ violations.
 |---|---|---|
 | `target-dir` | **Yes** | Path to the Crux app directory containing an `iOS/` shell |
 | `reference-dir` | No | Path to a known-good app for comparative review |
-| `scope` | No | `full` (default) runs all three passes; `quick` runs structural + quality only |
+| `scope` | No | `full` (default) runs all four passes (structural, quality, universal, integration); `quick` runs structural + quality only, skipping universal and integration |
 
 ## Process
 
@@ -54,13 +54,19 @@ issues, then re-review. Exit when no mechanical fixes are applied or
 
 #### 2a. Select passes for this iteration
 
-**First iteration**: Run all four passes -- structural, quality, universal,
-and integration. This is the comprehensive initial review.
+**First iteration (`scope = full`)**: Run all four passes -- structural,
+quality, universal, and integration. This is the comprehensive initial
+review.
 
-**Subsequent iterations**: Run only the **structural pass**, **quality pass**,
-and **universal pass**, scoped to files modified by the previous iteration's
-fixes. Skip the integration pass -- mechanical fixes do not alter FFI type
-mappings or build configuration.
+**First iteration (`scope = quick`)**: Run only the **structural pass** and
+**quality pass**. Skip the universal pass and integration pass entirely.
+
+**Subsequent iterations (either scope)**: Run only the passes that were
+active in the first iteration, minus the integration pass, scoped to files
+modified by the previous iteration's fixes. For `full` this means
+structural + quality + universal; for `quick` this means structural +
+quality only. Skip the integration pass on all subsequent iterations --
+mechanical fixes do not alter FFI type mappings or build configuration.
 
 #### 2b. Structural pass
 
@@ -95,7 +101,7 @@ Swift/SwiftUI best practice checks:
 
 Record findings with severity Warning or Info.
 
-#### 2d. Universal checks pass
+#### 2d. Universal checks pass (skip if scope = quick)
 
 Read `../../references/universal-review-checks.md` (shared across all Vectis
 reviewer skills).

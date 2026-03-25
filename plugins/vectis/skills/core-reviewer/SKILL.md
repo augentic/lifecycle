@@ -19,7 +19,7 @@ state machine incompleteness, and interaction-sequence race conditions.
 |---|---|---|
 | `target-dir` | **Yes** | Path to the Crux app directory to review (contains `shared/src/`) |
 | `reference-dir` | No | Path to a known-good Crux app for comparative review |
-| `scope` | No | `full` (default) runs all three passes; `quick` runs structural + quality only, skipping logic simulation |
+| `scope` | No | `full` (default) runs all five passes (structural, logic, quality, universal, comparative); `quick` runs structural + quality only, skipping logic simulation, universal checks, and comparative review |
 
 ## Process
 
