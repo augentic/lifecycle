@@ -56,6 +56,7 @@ Optionally specify a change name. If omitted, check whether it can be inferred f
 
    Update `.specify/changes/<name>/.metadata.yaml`:
    - Set `status` to `dropped`
+   - **Verify**: re-read `.metadata.yaml` and confirm the `status` value is exactly `dropped`. Valid lifecycle values are: `defining`, `defined`, `building`, `complete`, `merged`, `dropped`. If `status` is not one of these, correct it to `dropped`.
 
 5. **Move the change to archive**
 
@@ -86,3 +87,4 @@ The baseline remains unchanged.
 - Do not merge or rewrite any files under `.specify/specs/`
 - Warn if the change is already `complete`, since `/spec:merge` may be the intended action
 - Stop if the change is already finalized as `merged` or `dropped`
+- Valid lifecycle status values are: `defining`, `defined`, `building`, `complete`, `merged`, `dropped` -- use these exact strings when updating `.metadata.yaml`, no other values are permitted

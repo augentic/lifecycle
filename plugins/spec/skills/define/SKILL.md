@@ -176,6 +176,7 @@ The user's request should include a change name (kebab-case) OR a description of
    - Set `status: defined`
    - Set `defined_at` to current ISO-8601 timestamp
    - Set `touched_specs` from the spec files created — for each subdirectory in `.specify/changes/<name>/specs/`, record an entry with `name` (the directory name) and `type` (`new` if no baseline exists at `.specify/specs/<name>/spec.md`, `modified` if one does)
+   - **Verify**: re-read `.metadata.yaml` and confirm the `status` value is exactly `defined`. Valid lifecycle values are: `defining`, `defined`, `building`, `complete`, `merged`, `dropped`. If `status` is not one of these, correct it to `defined`.
 
    Summarize:
    - Change name and location
@@ -191,3 +192,4 @@ The user's request should include a change name (kebab-case) OR a description of
 - If a change with that name already exists, check its status before deciding how to proceed
 - Verify each artifact file exists after writing before proceeding to next
 - **IMPORTANT**: `context` and effective rules (project config with schema defaults as fallback) are constraints for YOU, not content for the file. Do NOT copy `<context>`, `<rules>`, `<project_context>` blocks into any artifact.
+- Valid lifecycle status values are: `defining`, `defined`, `building`, `complete`, `merged`, `dropped` -- use these exact strings when updating `.metadata.yaml`, no other values are permitted
