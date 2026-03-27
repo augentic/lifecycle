@@ -1,8 +1,8 @@
 # Universal Review Checks
 
-Language and domain-agnostic code quality checks shared across all reviewer
-skills. Each reviewer skill applies these checks using platform-specific
-detection heuristics documented in its own SKILL.md.
+Language and domain-agnostic code quality and security checks shared across
+all reviewer skills. Each reviewer skill applies these checks using
+platform-specific detection heuristics documented in its own SKILL.md.
 
 Checks tagged with **Spec-change indicator** commonly surface as requirements
 gaps rather than pure code defects. When the spec is silent on the concern
@@ -400,3 +400,120 @@ validation to runtime where it is easily forgotten.
   future (should be an enum for extensibility).
 - Struct fields whose valid values are constrained but the constraint is
   only enforced at one call site rather than by the type system.
+
+---
+
+## UNI-018: Hardcoded Secrets and Credentials
+
+**Severity**: Critical
+
+API keys, passwords, tokens, connection strings, and other secrets embedded
+directly in source code. Unlike hardcoded configuration values (UNI-014),
+secrets grant access to protected resources and their exposure can lead to
+data breaches, unauthorized access, or financial loss. Secrets in source
+code are routinely extracted by automated scanning of public and leaked
+repositories.
+
+**What to look for**:
+
+- String literals matching known secret prefixes (`sk-`, `pk-`, `ghp_`,
+  `Bearer `, `AKIA`, `xox-`).
+- Variables or constants named `password`, `secret`, `token`, `api_key`,
+  `apikey`, `auth`, or `credential` assigned a literal value.
+- Base64-encoded strings longer than 20 characters in `const` or `static`
+  declarations.
+- URLs containing embedded credentials (`https://user:pass@...`).
+- Private keys or certificates inlined as string literals.
+
+**Exemption**: Placeholder or example values (`https://api.example.com`,
+`your-api-key-here`, test fixtures with obviously fake tokens) are
+acceptable.
+
+---
+
+## UNI-019: Injection Vulnerabilities
+
+**Severity**: Critical
+
+Untrusted input flowing into a dangerous sink without sanitization or
+parameterization. The specific sink determines the attack class, but the
+root cause is the same: user-controlled data is treated as code or
+structure rather than as a value.
+
+This check complements UNI-002 (Unvalidated Input) by focusing on the
+*destination* of unvalidated data rather than its *entry point*. UNI-002
+catches missing validation at the boundary; UNI-019 catches validated-but-
+not-sanitized data reaching a dangerous API.
+
+**What to look for**:
+
+- **SQL / query injection**: String concatenation or interpolation used to
+  build database queries, search filters, or ORM conditions from
+  user-supplied values. Use parameterized queries or prepared statements.
+- **Command injection**: User input passed to shell execution, process
+  spawning, or system command APIs without escaping or allowlisting.
+- **Cross-site scripting (XSS)**: User-supplied text embedded in HTML, XML,
+  or markup output without escaping. Includes server-rendered templates,
+  WebSocket messages containing HTML, and dynamically constructed SVG.
+- **Path traversal**: User-controlled values used in file path construction
+  without canonicalization, prefix validation, or allowlisting. Patterns
+  like `../` or absolute paths in user input can escape intended
+  directories.
+- **Template injection**: User input interpolated into template engines,
+  expression evaluators, or DSL interpreters that can execute arbitrary
+  logic.
+
+---
+
+## UNI-020: Unsafe Deserialization of Untrusted Data
+
+**Severity**: Critical
+
+Deserializing data from an untrusted source into types that could bypass
+validation, escalate privileges, or cause denial of service. This is
+distinct from UNI-003 (which covers missing *error handling* on
+deserialization); UNI-020 focuses on the *security implications* of what
+gets deserialized and into what type.
+
+**What to look for**:
+
+- Deserializing untrusted input directly into internal domain types that
+  carry privilege or authorization state (e.g., a `User` struct with an
+  `is_admin` field populated from an external payload).
+- Accepting serialized data from an external source without schema
+  validation, allowing unexpected fields to be injected.
+- Deserializing into polymorphic or trait-object types where the concrete
+  type is attacker-controlled (common in JVM/Python; rare in Rust/Swift
+  but possible with `#[serde(tag)]` enums that include privileged
+  variants).
+- Large or deeply nested payloads deserialized without size limits,
+  enabling denial-of-service via memory exhaustion or stack overflow.
+
+---
+
+## UNI-021: Missing Authentication or Authorization Checks
+
+**Severity**: Critical
+
+Handlers that access sensitive data or perform state-mutating operations
+without verifying the caller's identity (authentication) or permissions
+(authorization). Every entry point that modifies data, returns
+personally identifiable information, or accesses protected resources
+should enforce an access control check.
+
+**What to look for**:
+
+- Handler entry points that accept and act on requests without checking
+  for an authentication token, session, or identity credential.
+- Endpoints that return sensitive data (PII, financial records, internal
+  system state) without verifying the caller has read access.
+- State-mutating operations (create, update, delete) that do not verify
+  the caller has write permission for the target resource.
+- Authorization checks that rely solely on client-supplied role or
+  permission claims without server-side verification.
+- Inconsistent enforcement: some handlers in a module check auth while
+  others in the same module do not, suggesting an oversight.
+
+**Spec-change indicator**: When the spec does not define which operations
+require authentication or what authorization model applies, the finding
+should propose adding access control requirements before fixing the code.

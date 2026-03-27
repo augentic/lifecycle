@@ -314,7 +314,7 @@ The three specialists analyze the crate concurrently. Each reads all `.rs` files
 
 After all specialists report, the lead reads
 `references/universal-review-checks.md` and applies checks UNI-001 through
-UNI-017 with Omnia/WASM-specific detection. Several universal checks overlap
+UNI-021 with Omnia/WASM-specific detection. Several universal checks overlap
 with categories already assigned to the specialists. Skip those and focus on
 the gaps:
 
@@ -326,6 +326,10 @@ the gaps:
 | UNI-010 Panics/crashes | Error Handling: unwrap/expect (COR) | Skip |
 | UNI-013 Dead code | Code Quality (QUA) | Skip |
 | UNI-014 Hardcoded config (partial) | Provider Misuse: std::env (COR) | Apply beyond env vars |
+| UNI-018 Hardcoded secrets | Security: hardcoded secrets (SEC) | Skip |
+| UNI-019 Injection vulnerabilities | Security: SQL/command/XSS injection (SEC) | Skip |
+| UNI-020 Unsafe deserialization | Security: unsafe deserialization (SEC) | Skip |
+| UNI-021 Missing auth checks | Security: missing authentication (SEC) | Skip |
 
 Apply the remaining checks with these Omnia/WASM-specific heuristics:
 
@@ -656,7 +660,7 @@ Before completing review:
 - [ ] Security Reviewer: SQL injection, XSS, secrets, WASM constraints checked
 - [ ] Correctness Reviewer: unwrap/expect, validation placement, provider usage checked
 - [ ] Quality Reviewer: N+1 patterns, naming, function length, dead code checked
-- [ ] Universal Checks: UNI-001 through UNI-017 applied with Omnia-specific heuristics (skipped where covered by SEC/COR/QUA)
+- [ ] Universal Checks: UNI-001 through UNI-021 applied with Omnia-specific heuristics (skipped where covered by SEC/COR/QUA)
 - [ ] Antagonist: counter-scan completed for blind spots
 
 ### Report Quality

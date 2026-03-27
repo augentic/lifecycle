@@ -106,7 +106,7 @@ Record findings with severity Warning or Info.
 Read `../../references/universal-review-checks.md` (shared across all
 reviewer skills).
 
-Apply checks UNI-001 through UNI-017 with Swift-specific detection. Several
+Apply checks UNI-001 through UNI-021 with Swift-specific detection. Several
 universal checks overlap with platform-specific checks already applied in
 earlier passes. Skip those and focus on the gaps:
 
@@ -162,10 +162,28 @@ Apply the remaining checks with these Swift-specific heuristics:
 - **UNI-017** (type safety): Look for `String` properties on view models or
   event types that hold values from a known closed set (should be Swift
   enums).
+- **UNI-018** (hardcoded secrets): Look for API keys, tokens, passwords,
+  or connection strings embedded as string literals in Swift source files.
+  Check for secrets in `Info.plist` values, hardcoded `Authorization`
+  headers, and credentials stored in plain-text constants rather than
+  Keychain.
+- **UNI-019** (injection vulnerabilities): Look for user input interpolated
+  into `WKWebView` HTML content without escaping, URL path segments built
+  via string concatenation, and `Process`/`NSTask` invocations with
+  user-controlled arguments.
+- **UNI-020** (unsafe deserialization): Look for `JSONDecoder` decoding of
+  untrusted external payloads directly into model types that carry
+  privilege state. Check for missing `ContentLength` or payload size limits
+  on data fetched from external sources.
+- **UNI-021** (missing auth checks): Check that effect handlers attaching
+  authentication credentials (Bearer tokens, API keys) to outbound
+  requests source them from secure storage (Keychain), not from hardcoded
+  values or unprotected UserDefaults. Flag API calls to protected
+  endpoints dispatched without any auth header.
 
 Record findings with the severity defined in the universal checklist. Tag
 findings that have a **Spec-change indicator** (UNI-002, UNI-004, UNI-007,
-UNI-008, UNI-011, UNI-012, UNI-014) for inclusion in the spec-change
+UNI-008, UNI-011, UNI-012, UNI-014, UNI-021) for inclusion in the spec-change
 output in step 3.
 
 #### 2e. Integration pass (first iteration only; skip if scope = quick)
