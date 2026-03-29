@@ -381,7 +381,7 @@ Prefix findings from this step with `UNI-` (e.g., UNI-1, UNI-2). Use the
 severity defined in the universal checklist for each check.
 
 Tag findings that have a **Spec-change indicator** (UNI-002, UNI-004,
-UNI-007, UNI-008, UNI-011, UNI-012, UNI-014) for inclusion in the
+UNI-007, UNI-008, UNI-011, UNI-012, UNI-014, UNI-021) for inclusion in the
 Adversarial Review and report synthesis. When the spec is silent on the
 concern a check raises, note the finding as a candidate for a spec update
 via `/spec:define`.
