@@ -600,12 +600,12 @@ async function checkPluginsDocInventory(): Promise<void> {
   }
 
   const documented = new Set<string>();
-  const SECTION_RE = /^## .+\(`plugins\/([^/]+)\/`\)/gm;
-  const SKILL_RE = /^- \*\*([a-z][a-z0-9-]*)\*\*/gm;
+  const SECTION_RE = /^## .+\(`plugins\/([^/]+)\/`\)/;
+  const SKILL_RE = /^- \*\*([a-z][a-z0-9-]*)\*\*/;
 
   let currentPlugin: string | null = null;
   for (const line of content.split("\n")) {
-    const sectionMatch = line.match(/^## .+\(`plugins\/([^/]+)\/`\)/);
+    const sectionMatch = line.match(SECTION_RE);
     if (sectionMatch) {
       currentPlugin = sectionMatch[1];
       continue;
@@ -615,7 +615,7 @@ async function checkPluginsDocInventory(): Promise<void> {
       continue;
     }
     if (currentPlugin) {
-      const skillMatch = line.match(/^- \*\*([a-z][a-z0-9-]*)\*\*/);
+      const skillMatch = line.match(SKILL_RE);
       if (skillMatch) {
         documented.add(`${currentPlugin}/${skillMatch[1]}`);
       }
