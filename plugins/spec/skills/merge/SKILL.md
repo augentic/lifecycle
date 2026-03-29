@@ -146,6 +146,7 @@ Optionally specify a change name. If omitted, check if it can be inferred from c
 
    Update `.specify/changes/<name>/.metadata.yaml`:
    - Set `status` to `merged`
+   - **Verify**: re-read `.metadata.yaml` and confirm the `status` value is exactly `merged`. Valid lifecycle values are: `defining`, `defined`, `building`, `complete`, `merged`, `dropped`. If `status` is not one of these, correct it to `merged`.
 
    ```bash
    mkdir -p .specify/changes/archive
@@ -180,5 +181,6 @@ All artifacts complete. All tasks complete.
 - Use `scripts/merge-specs.py` for all merge and validation operations — do not perform merges inline
 - If the merge tool is unavailable (e.g., `python3` not installed), fall back to manual merge following the algorithm in `delta-merge.md`
 - If the merge tool reports errors, stop and ask the user before proceeding
+- Valid lifecycle status values are: `defining`, `defined`, `building`, `complete`, `merged`, `dropped` -- use these exact strings when updating `.metadata.yaml`, no other values are permitted
 
 For the merge algorithm and a worked example, see `delta-merge.md`.

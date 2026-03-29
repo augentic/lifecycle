@@ -138,10 +138,10 @@ Record findings with severity Warning or Info.
 
 #### 2e. Universal checks pass
 
-Read `../../references/universal-review-checks.md` (shared across all Vectis
+Read `../../references/universal-review-checks.md` (shared across all
 reviewer skills).
 
-Apply checks UNI-001 through UNI-017 with Rust-specific detection. Several
+Apply checks UNI-001 through UNI-021 with Rust-specific detection. Several
 universal checks overlap with platform-specific checks already applied in
 earlier passes. Skip those and focus on the gaps:
 
@@ -153,6 +153,7 @@ earlier passes. Skip those and focus on the gaps:
 | UNI-006 Race conditions | LOG-003, LOG-006 | Skip |
 | UNI-010 Panics/crashes | GEN-001, CRX-011 | Skip |
 | UNI-017 Type safety (partial) | CRX-008 | Apply beyond ViewModel |
+| UNI-018 Hardcoded secrets | GEN-003 | Skip |
 
 Apply the remaining checks with these Rust-specific heuristics:
 
@@ -192,10 +193,24 @@ Apply the remaining checks with these Rust-specific heuristics:
 - **UNI-017** (type safety): Beyond CRX-008 (ViewModel), look for `String`
   fields on model types, Event payloads, or PendingOp variants that hold
   values from a known closed set (should be enums or newtypes).
+- **UNI-019** (injection vulnerabilities): Crux cores do not access
+  databases or spawn processes directly (these go through effects), but
+  check for user input interpolated into URL path segments, query strings,
+  or HTML/XML output built as strings. Also check for `format!` used to
+  construct structured data (JSON, SQL, URLs) rather than proper builders.
+- **UNI-020** (unsafe deserialization): Look for deserialization of
+  untrusted external payloads (SSE events, HTTP responses) directly into
+  internal model types that carry authorization or privilege state. Check
+  for missing size limits on payloads deserialized from effects.
+- **UNI-021** (missing auth checks): In a Crux core, authentication is
+  typically managed by the shell and passed as model state. Check that
+  handlers for sensitive operations (delete, admin actions) verify
+  `model.auth_state` or equivalent before proceeding. Flag handlers that
+  assume authentication without checking.
 
 Record findings with the severity defined in the universal checklist. Tag
 findings that have a **Spec-change indicator** (UNI-002, UNI-004, UNI-007,
-UNI-008, UNI-011, UNI-012, UNI-014) for inclusion in the spec-change
+UNI-008, UNI-011, UNI-012, UNI-014, UNI-021) for inclusion in the spec-change
 output in step 3.
 
 #### 2f. Comparative review (first iteration only; if reference-dir provided)
@@ -305,7 +320,7 @@ Before creating the Specify change, classify each design-level finding:
   decisions in `design.md`.
 
 Universal checks with a Spec-change indicator (UNI-002, UNI-004, UNI-007,
-UNI-008, UNI-011, UNI-012, UNI-014) commonly surface as spec-change
+UNI-008, UNI-011, UNI-012, UNI-014, UNI-021) commonly surface as spec-change
 findings. Consult `../../references/universal-review-checks.md` for the
 indicator description on each check.
 

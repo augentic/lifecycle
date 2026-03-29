@@ -122,6 +122,7 @@ Implement tasks from a Specify change.
    If `status` in `.metadata.yaml` is `defined` (first time building):
    - Update `status` to `building`
    - Set `build_started_at` to current ISO-8601 timestamp
+   - **Verify**: re-read `.metadata.yaml` and confirm the `status` value is exactly `building`. Valid lifecycle values are: `defining`, `defined`, `building`, `complete`, `merged`, `dropped`. If `status` is not one of these, correct it to `building`.
 
 9. **Implement tasks (loop until done or blocked)**
 
@@ -148,6 +149,7 @@ Implement tasks from a Specify change.
 
    If all tasks are complete:
    - Update `.metadata.yaml`: set `status` to `complete`, set `completed_at` to current ISO-8601 timestamp
+   - **Verify**: re-read `.metadata.yaml` and confirm the `status` value is exactly `complete`. Valid lifecycle values are: `defining`, `defined`, `building`, `complete`, `merged`, `dropped`. If `status` is not one of these (e.g., `built`), correct it to `complete`.
 
    Display:
    - Tasks completed this session
@@ -213,6 +215,7 @@ What would you like to do?
 - Keep code changes minimal and scoped to each task
 - Update task checkbox immediately after completing each task
 - Pause on errors, blockers, or unclear requirements -- don't guess
+- Valid lifecycle status values are: `defining`, `defined`, `building`, `complete`, `merged`, `dropped` -- use these exact strings when updating `.metadata.yaml`, no other values are permitted
 
 **Fluid Workflow Integration**
 
